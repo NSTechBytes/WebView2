@@ -27,7 +27,7 @@ A powerful Rainmeter plugin that embeds Microsoft Edge WebView2 control to displ
 
 ### Installation
 
-1. Download the latest release from [Releases](https://github.com/NSTechBytes/WebView2/releases)
+1. Download the latest release from [Releases](https://github.com/nstechbytes/WebView2/releases)
 2. Install the `.rmskin` package, or
 3. Manually copy `WebView2.dll` to `%APPDATA%\Rainmeter\Plugins\`
 
@@ -191,7 +191,7 @@ Create `@Resources\dashboard.html`:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/NSTechBytes/WebView2.git
+   git clone https://github.com/nstechbytes/WebView2.git
    cd WebView2
    ```
 
@@ -261,8 +261,8 @@ This project is licensed under the GPL-2.0 License - see the [LICENSE](LICENSE) 
 
 ## 📧 Contact
 
-- **Author**: NSTechBytes
-- **GitHub**: [https://github.com/NSTechBytes/WebView2](https://github.com/NSTechBytes/WebView2)
+- **Author**: nstechbytes
+- **GitHub**: [https://github.com/nstechbytes/WebView2](https://github.com/nstechbytes/WebView2)
 
 ## 🔗 Related Links
 

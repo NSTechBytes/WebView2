@@ -12,10 +12,10 @@
                         "name":  "WebView2.dll"
                     }
                 ],
-    "name":  "WebView2-Plugin",
+    "name":  "WebView2",
     "loadType":  "Skin",
-    "load":  "WebView2-Plugin\\Main.ini",
+    "load":  "WebView2\\Main.ini",
     "headerImage":  ".\\Resources\\banner.bmp",
-    "configPrefix":  "WebView2-Plugin",
-    "output":  ".\\dist\\WebView2-Plugin_v1.2.0.rmskin"
+    "configPrefix":  "WebView2",
+    "output":  ".\\dist\\WebView2_Alpha1.rmskin"
 }
