@@ -132,47 +132,6 @@
         
         <div class="clock" id="clock"></div>
     </div>
-    
-    <script>
-        // Update clock
-        function updateClock() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString();
-            document.getElementById('clock').textContent = timeString;
-        }
-        
-        setInterval(updateClock, 1000);
-        updateClock();
-        
-        // Change background color
-        function changeColor() {
-            const colors = [
-                'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-                'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
-            ];
-            const randomColor = colors[Math.floor(Math.random() * colors.length)];
-            document.body.style.background = randomColor;
-        }
-        
-        // Show alert
-        function showAlert() {
-            alert('Hello from WebView2! 🎉\n\nThis demonstrates JavaScript execution in the WebView2 control.');
-        }
-        
-        // Add animation on load
-        window.addEventListener('load', () => {
-            document.querySelector('.container').style.opacity = '0';
-            document.querySelector('.container').style.transform = 'translateY(20px)';
-            
-            setTimeout(() => {
-                document.querySelector('.container').style.transition = 'all 0.5s ease';
-                document.querySelector('.container').style.opacity = '1';
-                document.querySelector('.container').style.transform = 'translateY(0)';
-            }, 100);
-        });
-    </script>
+    <script src="./script.js"></script>
 </body>
 </html>
