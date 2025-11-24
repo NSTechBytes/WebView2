@@ -1,0 +1,21 @@
+﻿{
+    "skinDir":  ".\\Resources\\Skins",
+    "version":  "1.2.0",
+    "minimumVersion":  "4.5",
+    "author":  "nstechbytes",
+    "variableFiles":  "",
+    "minimumWindows":  "5.1",
+    "plugins":  [
+                    {
+                        "x64":  ".\\dist\\x64",
+                        "x32":  ".\\dist\\x32",
+                        "name":  "WebView2.dll"
+                    }
+                ],
+    "name":  "WebView2-Plugin",
+    "loadType":  "Skin",
+    "load":  "WebView2-Plugin\\Main.ini",
+    "headerImage":  ".\\Resources\\banner.bmp",
+    "configPrefix":  "WebView2-Plugin",
+    "output":  ".\\dist\\WebView2-Plugin_v1.2.0.rmskin"
+}
