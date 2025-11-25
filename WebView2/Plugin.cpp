@@ -49,9 +49,9 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 // Measure constructor
 Measure::Measure() : rm(nullptr), skin(nullptr), skinWindow(nullptr), 
-            webViewWindow(nullptr), measureName(nullptr),
+            measureName(nullptr),
             width(800), height(600), x(0), y(0), 
-            visible(true), initialized(false), isCleaningUp(false), webMessageToken{}
+            visible(true), initialized(false), webMessageToken{}
 {
     // Initialize COM for this thread if not already done
     if (!g_comInitialized)
@@ -67,10 +67,7 @@ Measure::Measure() : rm(nullptr), skin(nullptr), skinWindow(nullptr),
 // Measure destructor
 Measure::~Measure()
 {
-    // Mark that cleanup is in progress
-    isCleaningUp = true;
-    
-    // Proper cleanup sequence to prevent crashes and race conditions
+    // Proper cleanup sequence to prevent crashes
     
     // 1. Remove event handlers first
     if (webView && webMessageToken.value != 0)
@@ -92,19 +89,8 @@ Measure::~Measure()
         webView.reset(); // Explicit release
     }
     
-    // 4. Longer delay to ensure WebView2 runtime fully releases resources
-    // This prevents 0x80080005 error on skin refresh
-    Sleep(250);
-    
-    // 5. Destroy window last
-    if (webViewWindow && IsWindow(webViewWindow))
-    {
-        DestroyWindow(webViewWindow);
-        webViewWindow = nullptr;
-    }
-    
-    // 6. Final delay to ensure complete cleanup
-    Sleep(50);
+    // 4. Brief delay to allow async cleanup
+    Sleep(100);
 }
 
 // Rainmeter Plugin Exports
@@ -170,7 +156,7 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
     measure->visible = RmReadInt(rm, L"Visible", 1) != 0;
     
     // Create WebView2 if not already created
-    if (!measure->initialized && !measure->isCleaningUp)
+    if (!measure->initialized)
     {
         CreateWebView2(measure);
     }
@@ -182,24 +168,23 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
             measure->webView->Navigate(measure->url.c_str());
         }
         
-        // Update window position and size
-        if (measure->webViewWindow)
+        // Update WebView2 bounds
+        if (measure->webViewController)
         {
-            SetWindowPos(
-                measure->webViewWindow,
-                nullptr,
-                measure->x, measure->y,
-                measure->width, measure->height,
-                SWP_NOZORDER | SWP_NOACTIVATE
-            );
-            
-            ShowWindow(measure->webViewWindow, measure->visible ? SW_SHOW : SW_HIDE);
-            
-            // Update WebView2 controller visibility
-            if (measure->webViewController)
+            RECT bounds;
+            GetClientRect(measure->skinWindow, &bounds);
+            bounds.left = measure->x;
+            bounds.top = measure->y;
+            if (measure->width > 0)
             {
-                measure->webViewController->put_IsVisible(measure->visible ? TRUE : FALSE);
+                bounds.right = measure->x + measure->width;
             }
+            if (measure->height > 0)
+            {
+                bounds.bottom = measure->y + measure->height;
+            }
+            measure->webViewController->put_Bounds(bounds);
+            measure->webViewController->put_IsVisible(measure->visible ? TRUE : FALSE);
         }
     }
 }
@@ -264,30 +249,22 @@ PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args)
     }
     else if (_wcsicmp(action.c_str(), L"Show") == 0)
     {
-        if (measure->webViewWindow)
+        measure->visible = true;
+        
+        // Make WebView2 controller visible
+        if (measure->webViewController)
         {
-            ShowWindow(measure->webViewWindow, SW_SHOW);
-            measure->visible = true;
-            
-            // Also make WebView2 controller visible
-            if (measure->webViewController)
-            {
-                measure->webViewController->put_IsVisible(TRUE);
-            }
+            measure->webViewController->put_IsVisible(TRUE);
         }
     }
     else if (_wcsicmp(action.c_str(), L"Hide") == 0)
     {
-        if (measure->webViewWindow)
+        measure->visible = false;
+        
+        // Hide WebView2 controller
+        if (measure->webViewController)
         {
-            ShowWindow(measure->webViewWindow, SW_HIDE);
-            measure->visible = false;
-            
-            // Also hide WebView2 controller
-            if (measure->webViewController)
-            {
-                measure->webViewController->put_IsVisible(FALSE);
-            }
+            measure->webViewController->put_IsVisible(FALSE);
         }
     }
     else if (_wcsicmp(action.c_str(), L"ExecuteScript") == 0)

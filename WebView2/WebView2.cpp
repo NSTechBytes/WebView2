@@ -1,57 +1,6 @@
 #include "Plugin.h"
 #include "HostObjectRmAPI.h"
 #include "../API/RainmeterAPI.h"
-#include <vector>
-#include <sstream>
-
-// Window class registration flag
-static bool g_windowClassRegistered = false;
-
-// Window procedure for WebView2 host window
-LRESULT CALLBACK WebViewWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    switch (uMsg)
-    {
-        case WM_SIZE:
-        {
-            // Get measure from window user data
-            Measure* measure = reinterpret_cast<Measure*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-            if (measure && measure->webViewController)
-            {
-                RECT bounds;
-                GetClientRect(hwnd, &bounds);
-                measure->webViewController->put_Bounds(bounds);
-            }
-            return 0;
-        }
-        
-        case WM_DESTROY:
-            return 0;
-            
-        default:
-            return DefWindowProc(hwnd, uMsg, wParam, lParam);
-    }
-}
-
-// Register window class for WebView2 host
-void RegisterWebViewWindowClass()
-{
-    if (g_windowClassRegistered)
-        return;
-    
-    WNDCLASSEX wc = { 0 };
-    wc.cbSize = sizeof(WNDCLASSEX);
-    wc.lpfnWndProc = WebViewWindowProc;
-    wc.hInstance = GetModuleHandle(nullptr);
-    wc.lpszClassName = L"RainmeterWebView2Host";
-    wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    
-    if (RegisterClassEx(&wc))
-    {
-        g_windowClassRegistered = true;
-    }
-}
-
 
 // Create WebView2 environment and controller
 void CreateWebView2(Measure* measure)
@@ -62,33 +11,6 @@ void CreateWebView2(Measure* measure)
             RmLog(measure->rm, LOG_ERROR, L"WebView2: Invalid measure or skin window");
         return;
     }
-    
-    // Register window class
-    RegisterWebViewWindowClass();
-    
-    // Create host window as child of skin window
-    measure->webViewWindow = CreateWindowEx(
-        0,
-        L"RainmeterWebView2Host",
-        L"WebView2",
-        WS_CHILD | (measure->visible ? WS_VISIBLE : 0),
-        measure->x, measure->y,
-        measure->width, measure->height,
-        measure->skinWindow,
-        nullptr,
-        GetModuleHandle(nullptr),
-        nullptr
-    );
-    
-    if (!measure->webViewWindow)
-    {
-        if (measure->rm)
-            RmLog(measure->rm, LOG_ERROR, L"WebView2: Failed to create host window");
-        return;
-    }
-    
-    // Store measure pointer in window
-    SetWindowLongPtr(measure->webViewWindow, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(measure));
     
     // Create user data folder in TEMP directory to avoid permission issues
     wchar_t tempPath[MAX_PATH];
@@ -102,134 +24,8 @@ void CreateWebView2(Measure* measure)
     HRESULT hr = CreateCoreWebView2EnvironmentWithOptions(
         nullptr, userDataFolder.c_str(), nullptr,
         Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(
-            [measure](HRESULT result, ICoreWebView2Environment* env) -> HRESULT
-            {
-                if (FAILED(result))
-                {
-                    if (measure->rm)
-                    {
-                        wchar_t errorMsg[256];
-                        swprintf_s(errorMsg, L"WebView2: Failed to create environment (HRESULT: 0x%08X)", result);
-                        RmLog(measure->rm, LOG_ERROR, errorMsg);
-                    }
-                    return result;
-                }
-                
-                // Helper function to initialize controller after successful creation
-                auto initializeController = [measure](ICoreWebView2Controller* controller) -> HRESULT
-                {
-                    measure->webViewController = controller;
-                    measure->webViewController->get_CoreWebView2(&measure->webView);
-                    
-                    // Set bounds
-                    RECT bounds;
-                    GetClientRect(measure->webViewWindow, &bounds);
-                    measure->webViewController->put_Bounds(bounds);
-                    
-                    // Set initial visibility
-                    measure->webViewController->put_IsVisible(measure->visible ? TRUE : FALSE);
-                    
-                    // Enable host objects and JavaScript in settings
-                    wil::com_ptr<ICoreWebView2Settings> settings;
-                    measure->webView->get_Settings(&settings);
-                    settings->put_IsScriptEnabled(TRUE);
-                    settings->put_AreDefaultScriptDialogsEnabled(TRUE);
-                    settings->put_IsWebMessageEnabled(TRUE);
-                    settings->put_AreHostObjectsAllowed(TRUE);
-                    settings->put_AreDevToolsEnabled(TRUE);
-                    settings->put_AreDefaultContextMenusEnabled(TRUE);
-                    
-                    // Create and inject COM Host Object for Rainmeter API
-                    wil::com_ptr<HostObjectRmAPI> hostObject = 
-                        Microsoft::WRL::Make<HostObjectRmAPI>(measure, g_typeLib);
-                    
-                    VARIANT variant = {};
-                    hostObject.query_to<IDispatch>(&variant.pdispVal);
-                    variant.vt = VT_DISPATCH;
-                    measure->webView->AddHostObjectToScript(L"rm", &variant);
-                    variant.pdispVal->Release();
-                    
-                    // Add script to make rm available globally
-                    measure->webView->AddScriptToExecuteOnDocumentCreated(
-                        L"window.rm = chrome.webview.hostObjects.sync.rm",
-                        nullptr
-                    );
-                    
-                    // Navigate to URL
-                    if (!measure->url.empty())
-                    {
-                        measure->webView->Navigate(measure->url.c_str());
-                    }
-                    
-                    measure->initialized = true;
-                    
-                    if (measure->rm)
-                        RmLog(measure->rm, LOG_NOTICE, L"WebView2: Initialized successfully with COM Host Objects");
-                    
-                    return S_OK;
-                };
-                
-                // Create WebView2 controller with retry for 0x80080005
-                env->CreateCoreWebView2Controller(
-                    measure->webViewWindow,
-                    Callback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(
-                        [measure, env, initializeController](HRESULT result, ICoreWebView2Controller* controller) -> HRESULT
-                        {
-                            if (FAILED(result))
-                            {
-                                // Retry once for 0x80080005 (CO_E_SERVER_EXEC_FAILURE)
-                                // This error occurs when previous instance is still cleaning up
-                                if (result == 0x80080005)
-                                {
-                                    if (measure->rm)
-                                    {
-                                        RmLog(measure->rm, LOG_WARNING, L"WebView2: Controller creation failed (previous instance cleaning up), retrying after delay...");
-                                    }
-                                    
-                                    // Wait for previous instance to fully clean up
-                                    Sleep(300);
-                                    
-                                    // Single retry attempt
-                                    env->CreateCoreWebView2Controller(
-                                        measure->webViewWindow,
-                                        Callback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(
-                                            [measure, initializeController](HRESULT retryResult, ICoreWebView2Controller* retryController) -> HRESULT
-                                            {
-                                                if (FAILED(retryResult))
-                                                {
-                                                    if (measure->rm)
-                                                    {
-                                                        wchar_t errorMsg[256];
-                                                        swprintf_s(errorMsg, L"WebView2: Failed to create controller after retry (HRESULT: 0x%08X)", retryResult);
-                                                        RmLog(measure->rm, LOG_ERROR, errorMsg);
-                                                    }
-                                                    return retryResult;
-                                                }
-                                                
-                                                return initializeController(retryController);
-                                            }
-                                        ).Get()
-                                    );
-                                    
-                                    return result;
-                                }
-                                
-                                if (measure->rm)
-                                {
-                                    wchar_t errorMsg[256];
-                                    swprintf_s(errorMsg, L"WebView2: Failed to create controller (HRESULT: 0x%08X)", result);
-                                    RmLog(measure->rm, LOG_ERROR, errorMsg);
-                                }
-                                return result;
-                            }
-                            
-                            return initializeController(controller);
-                        }
-                    ).Get()
-                );
-                
-                return S_OK;
-            }
+            measure,
+            &Measure::CreateEnvironmentHandler
         ).Get()
     );
     
@@ -242,4 +38,120 @@ void CreateWebView2(Measure* measure)
             RmLog(measure->rm, LOG_ERROR, errorMsg);
         }
     }
+}
+
+// Environment creation callback
+HRESULT Measure::CreateEnvironmentHandler(HRESULT result, ICoreWebView2Environment* env)
+{
+    if (FAILED(result))
+    {
+        if (rm)
+        {
+            wchar_t errorMsg[256];
+            swprintf_s(errorMsg, L"WebView2: Failed to create environment (HRESULT: 0x%08X)", result);
+            RmLog(rm, LOG_ERROR, errorMsg);
+        }
+        return result;
+    }
+    
+    // Create WebView2 controller using skin window directly
+    env->CreateCoreWebView2Controller(
+        skinWindow,
+        Callback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(
+            this,
+            &Measure::CreateControllerHandler
+        ).Get()
+    );
+    
+    return S_OK;
+}
+
+// Controller creation callback
+HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller* controller)
+{
+    if (FAILED(result))
+    {
+        if (rm)
+        {
+            wchar_t errorMsg[256];
+            swprintf_s(errorMsg, L"WebView2: Failed to create controller (HRESULT: 0x%08X)", result);
+            RmLog(rm, LOG_ERROR, errorMsg);
+        }
+        return result;
+    }
+    
+    if (controller == nullptr)
+    {
+        if (rm)
+            RmLog(rm, LOG_ERROR, L"WebView2: Controller is null");
+        return S_FALSE;
+    }
+    
+    webViewController = controller;
+    webViewController->get_CoreWebView2(&webView);
+    
+    // Set bounds within the skin window
+    RECT bounds;
+    GetClientRect(skinWindow, &bounds);
+    bounds.left = x;
+    bounds.top = y;
+    if (width > 0)
+    {
+        bounds.right = x + width;
+    }
+    if (height > 0)
+    {
+        bounds.bottom = y + height;
+    }
+    webViewController->put_Bounds(bounds);
+    
+    // Set initial visibility
+    webViewController->put_IsVisible(visible ? TRUE : FALSE);
+    
+    // Transparent background
+    auto controller2 = webViewController.query<ICoreWebView2Controller2>();
+    if (controller2)
+    {
+        COREWEBVIEW2_COLOR transparentColor = { 0, 0, 0, 0 };
+        controller2->put_DefaultBackgroundColor(transparentColor);
+    }
+    
+    // Enable host objects and JavaScript in settings
+    wil::com_ptr<ICoreWebView2Settings> settings;
+    webView->get_Settings(&settings);
+    settings->put_IsScriptEnabled(TRUE);
+    settings->put_AreDefaultScriptDialogsEnabled(TRUE);
+    settings->put_IsWebMessageEnabled(TRUE);
+    settings->put_AreHostObjectsAllowed(TRUE);
+    settings->put_AreDevToolsEnabled(TRUE);
+    settings->put_AreDefaultContextMenusEnabled(TRUE);
+    
+    // Create and inject COM Host Object for Rainmeter API
+    wil::com_ptr<HostObjectRmAPI> hostObject = 
+        Microsoft::WRL::Make<HostObjectRmAPI>(this, g_typeLib);
+    
+    VARIANT variant = {};
+    hostObject.query_to<IDispatch>(&variant.pdispVal);
+    variant.vt = VT_DISPATCH;
+    webView->AddHostObjectToScript(L"rm", &variant);
+    variant.pdispVal->Release();
+    
+    // Add script to make rm available globally
+    webView->AddScriptToExecuteOnDocumentCreated(
+        L"window.rm = chrome.webview.hostObjects.sync.rm",
+        nullptr
+    );
+    
+    // Navigate to URL
+    if (!url.empty())
+    {
+        webView->Navigate(url.c_str());
+    }
+    
+    initialized = true;
+    
+    if (rm)
+        RmLog(rm, LOG_NOTICE, L"WebView2: Initialized successfully with COM Host Objects");
+    
+    return S_OK;
 }
