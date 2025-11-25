@@ -5,5 +5,22 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WebView2.cpp" />
+    <ClCompile Include="HostObjectRmAPI.cpp" />
+    <ClCompile Include="Plugin.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="HostObjectRmAPI.h" />
+    <ClInclude Include="Plugin.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="HostObject_h.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="HostObject.idl" />
   </ItemGroup>
 </Project>
