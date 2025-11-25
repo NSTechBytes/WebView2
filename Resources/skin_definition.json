@@ -1,6 +1,6 @@
 ﻿{
     "skinDir":  ".\\Resources\\Skins",
-    "version":  "1.2.0",
+    "version":  "0.0.3",
     "minimumVersion":  "4.5",
     "author":  "nstechbytes",
     "variableFiles":  "",
@@ -17,5 +17,5 @@
     "load":  "WebView2\\Main.ini",
     "headerImage":  ".\\Resources\\banner.bmp",
     "configPrefix":  "WebView2",
-    "output":  ".\\dist\\WebView2_Alpha2.rmskin"
+    "output":  ".\\dist\\WebView2_v0.0.3_Alpha.rmskin"
 }
