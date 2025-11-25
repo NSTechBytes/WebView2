@@ -7,6 +7,46 @@
 // Global COM initialization tracking
 static bool g_comInitialized = false;
 
+// Global TypeLib for COM objects
+wil::com_ptr<ITypeLib> g_typeLib;
+
+// DllMain to load TypeLib from embedded resources
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+    if (fdwReason == DLL_PROCESS_ATTACH)
+    {
+        // Extract TypeLib from embedded resource and load it
+        wchar_t tempPath[MAX_PATH];
+        GetTempPath(MAX_PATH, tempPath);
+        wcscat_s(tempPath, L"WebView2.tlb");
+
+        // Read embedded resource: ID = 1, Type = TYPELIB
+        HRSRC hResInfo = FindResource(hinstDLL, MAKEINTRESOURCE(1), L"TYPELIB");
+        if (hResInfo)
+        {
+            HGLOBAL hRes = LoadResource(hinstDLL, hResInfo);
+            if (hRes)  // Check if LoadResource succeeded
+            {
+                LPVOID memRes = LockResource(hRes);
+                DWORD sizeRes = SizeofResource(hinstDLL, hResInfo);
+
+                HANDLE hFile = CreateFile(tempPath, GENERIC_WRITE, 0, NULL,
+                                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (hFile != INVALID_HANDLE_VALUE)
+                {
+                    DWORD written;
+                    WriteFile(hFile, memRes, sizeRes, &written, NULL);
+                    CloseHandle(hFile);
+
+                    // Load the TypeLib
+                    LoadTypeLib(tempPath, &g_typeLib);
+                }
+            }
+        }
+    }
+    return TRUE;
+}
+
 // Measure constructor
 Measure::Measure() : rm(nullptr), skin(nullptr), skinWindow(nullptr), 
             webViewWindow(nullptr), measureName(nullptr),

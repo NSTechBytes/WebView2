@@ -22,14 +22,21 @@
     <ResourceCompile Include="WebView2.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="HostObjectRmAPI.cpp" />
     <ClCompile Include="Plugin.cpp" />
     <ClCompile Include="WebView2.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="HostObjectRmAPI.h" />
+    <ClInclude Include="HostObject_h.h" />
     <ClInclude Include="Plugin.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="HostObject.idl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{64FDEE97-6B7E-40E5-A489-ECA322825BC8}</ProjectGuid>

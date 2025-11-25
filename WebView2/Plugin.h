@@ -8,6 +8,9 @@
 
 using namespace Microsoft::WRL;
 
+// Global TypeLib for COM objects
+extern wil::com_ptr<ITypeLib> g_typeLib;
+
 // Measure structure containing WebView2 state
 struct Measure
 {
@@ -36,6 +39,4 @@ struct Measure
 // WebView2 functions
 void CreateWebView2(Measure* measure);
 void RegisterWebViewWindowClass();
-void InjectJavaScriptBridge(Measure* measure);
-void HandleWebMessage(Measure* measure, LPCWSTR message);
 LRESULT CALLBACK WebViewWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

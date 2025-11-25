@@ -205,12 +205,12 @@
     
     <script>
         // Load skin information on page load
-        window.addEventListener('DOMContentLoaded', async function() {
+        window.addEventListener('DOMContentLoaded', function() {
             try {
-                const measureName = await rm.MeasureName;
-                const skinName = await rm.SkinName;
-                const windowHandle = await rm.SkinWindowHandle;
-                const settingsFile = await rm.SettingsFile;
+                const measureName = rm.MeasureName;
+                const skinName = rm.SkinName;
+                const windowHandle = rm.SkinWindowHandle;
+                const settingsFile = rm.SettingsFile;
                 
                 document.getElementById('measureName').textContent = measureName || 'N/A';
                 document.getElementById('skinName').textContent = skinName || 'N/A';
@@ -224,11 +224,11 @@
         });
         
         // Test ReadString
-        async function testReadString() {
+        function testReadString() {
             const output = document.getElementById('readOutput');
             try {
                 output.innerHTML = 'Reading Url option...';
-                const value = await rm.ReadString('Url', 'default');
+                const value = rm.ReadString('Url', 'default');
                 output.innerHTML = `<span class="success">✓ ReadString('Url'):</span>\n${value}`;
             } catch (error) {
                 output.innerHTML = `<span class="error">✗ Error:</span> ${error.message}`;
@@ -236,11 +236,11 @@
         }
         
         // Test ReadInt
-        async function testReadInt() {
+        function testReadInt() {
             const output = document.getElementById('readOutput');
             try {
                 output.innerHTML = 'Reading Width option...';
-                const value = await rm.ReadInt('Width', 800);
+                const value = rm.ReadInt('Width', 800);
                 output.innerHTML = `<span class="success">✓ ReadInt('Width'):</span>\n${value}`;
             } catch (error) {
                 output.innerHTML = `<span class="error">✗ Error:</span> ${error.message}`;
@@ -248,11 +248,11 @@
         }
         
         // Test ReadDouble
-        async function testReadDouble() {
+        function testReadDouble() {
             const output = document.getElementById('readOutput');
             try {
                 output.innerHTML = 'Reading Height option...';
-                const value = await rm.ReadDouble('Height', 600.0);
+                const value = rm.ReadDouble('Height', 600.0);
                 output.innerHTML = `<span class="success">✓ ReadDouble('Height'):</span>\n${value}`;
             } catch (error) {
                 output.innerHTML = `<span class="error">✗ Error:</span> ${error.message}`;
@@ -260,11 +260,11 @@
         }
         
         // Test ReadPath
-        async function testReadPath() {
+        function testReadPath() {
             const output = document.getElementById('readOutput');
             try {
                 output.innerHTML = 'Reading Url as path...';
-                const value = await rm.ReadPath('Url', '');
+                const value = rm.ReadPath('Url', '');
                 output.innerHTML = `<span class="success">✓ ReadPath('Url'):</span>\n${value}`;
             } catch (error) {
                 output.innerHTML = `<span class="error">✗ Error:</span> ${error.message}`;
@@ -296,11 +296,11 @@
         }
         
         // Test ReplaceVariables
-        async function testReplaceVars() {
+        function testReplaceVars() {
             const output = document.getElementById('executeOutput');
             try {
                 output.innerHTML = 'Replacing variables...';
-                const value = await rm.ReplaceVariables('#CURRENTCONFIG#');
+                const value = rm.ReplaceVariables('#CURRENTCONFIG#');
                 output.innerHTML = `<span class="success">✓ ReplaceVariables('#CURRENTCONFIG#'):</span>\n${value}`;
             } catch (error) {
                 output.innerHTML = `<span class="error">✗ Error:</span> ${error.message}`;
@@ -308,11 +308,11 @@
         }
         
         // Test PathToAbsolute
-        async function testPathToAbsolute() {
+        function testPathToAbsolute() {
             const output = document.getElementById('executeOutput');
             try {
                 output.innerHTML = 'Converting path...';
-                const value = await rm.PathToAbsolute('#@#example.html');
+                const value = rm.PathToAbsolute('#@#example.html');
                 output.innerHTML = `<span class="success">✓ PathToAbsolute('#@#example.html'):</span>\n${value}`;
             } catch (error) {
                 output.innerHTML = `<span class="error">✗ Error:</span> ${error.message}`;
@@ -320,7 +320,7 @@
         }
         
         // Test custom read
-        async function testCustomRead() {
+        function testCustomRead() {
             const output = document.getElementById('customOutput');
             const option = document.getElementById('optionInput').value;
             
@@ -331,7 +331,7 @@
             
             try {
                 output.innerHTML = `Reading option "${option}"...`;
-                const value = await rm.ReadString(option, 'not found');
+                const value = rm.ReadString(option, 'not found');
                 output.innerHTML = `<span class="success">✓ ReadString('${option}'):</span>\n${value}`;
             } catch (error) {
                 output.innerHTML = `<span class="error">✗ Error:</span> ${error.message}`;
