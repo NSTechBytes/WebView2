@@ -124,8 +124,8 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
     }
     
     // Read dimensions
-    measure->width = RmReadInt(rm, L"Width", 800);
-    measure->height = RmReadInt(rm, L"Height", 600);
+    measure->width = RmReadInt(rm, L"W", 800);
+    measure->height = RmReadInt(rm, L"H", 600);
     measure->x = RmReadInt(rm, L"X", 0);
     measure->y = RmReadInt(rm, L"Y", 0);
     
@@ -230,7 +230,7 @@ PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args)
             );
         }
     }
-    else if (_wcsicmp(action.c_str(), L"SetWidth") == 0)
+    else if (_wcsicmp(action.c_str(), L"SetW") == 0)
     {
         if (!param.empty())
         {
@@ -252,7 +252,7 @@ PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args)
             }
         }
     }
-    else if (_wcsicmp(action.c_str(), L"SetHeight") == 0)
+    else if (_wcsicmp(action.c_str(), L"SetH") == 0)
     {
         if (!param.empty())
         {
