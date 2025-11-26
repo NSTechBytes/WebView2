@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReadMeasureOption Demo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1>Measure Option Reader</h1>
+
+    <div class="container">
+        <!-- String Reader -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">String Option</span>
+                <span class="card-subtitle">TestString</span>
+            </div>
+            <div id="string-output" class="value-display">Waiting...</div>
+            <div id="string-status" class="status"></div>
+        </div>
+
+        <!-- Int Reader -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Integer Option</span>
+                <span class="card-subtitle">TestInt</span>
+            </div>
+            <div id="int-output" class="value-display">Waiting...</div>
+            <div id="int-status" class="status"></div>
+        </div>
+
+        <!-- Double Reader -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Double Option</span>
+                <span class="card-subtitle">TestDouble</span>
+            </div>
+            <div id="double-output" class="value-display">Waiting...</div>
+            <div id="double-status" class="status"></div>
+        </div>
+
+        <!-- Formula Reader -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Formula Option</span>
+                <span class="card-subtitle">TestFormula</span>
+            </div>
+            <div id="formula-output" class="value-display">Waiting...</div>
+            <div id="formula-status" class="status"></div>
+        </div>
+
+        <!-- Path Reader -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Path Option</span>
+                <span class="card-subtitle">TestPath</span>
+            </div>
+            <div id="path-output" class="value-display">Waiting...</div>
+            <div id="path-status" class="status"></div>
+        </div>
+    </div>
+
+    <button class="btn" onclick="refreshValues()">Refresh Values</button>
+    <script src="script.js"></script>
+</body>
+
+</html>
