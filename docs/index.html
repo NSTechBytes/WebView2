@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebView2 Plugin Documentation</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header class="mobile-header">
+        <button id="menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+        <span class="mobile-title">WebView2 Plugin Docs</span>
+    </header>
+
+    <div class="container">
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h1>WebView2 Docs</h1>
+            </div>
+            <div class="search-container">
+                <label for="search-input" class="sr-only">Search documentation</label>
+                <input type="text" id="search-input" placeholder="Search docs..." aria-label="Search documentation">
+            </div>
+            <div id="toc" class="toc" role="navigation" aria-label="Table of Contents">
+                <ul id="toc-list">
+                    <li><a href="#introduction">Introduction</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#installation">Installation</a></li>
+                    <li><a href="#quick-start">Quick Start</a></li>
+                    <li><a href="#plugin-options">Plugin Options</a></li>
+                    <li><a href="#bang-commands">Bang Commands</a></li>
+                    <li><a href="#javascript-api">JavaScript API</a></li>
+                    <li><a href="#examples">Examples</a></li>
+                </ul>
+                <div id="no-results" class="hidden" aria-live="polite">No results found</div>
+            </div>
+        </nav>
+
+        <main id="main-content" class="content">
+            <section id="introduction">
+                <h2>Introduction</h2>
+                <p>A powerful Rainmeter plugin that embeds Microsoft Edge WebView2 control to display web content or local HTML files directly in your Rainmeter skins. It provides a seamless bridge between Rainmeter measures and web content, enabling rich, interactive user interfaces.</p>
+            </section>
+
+            <section id="features">
+                <h2>Features</h2>
+                <ul>
+                    <li>🌐 <strong>Display Web Pages</strong> - Load any website directly in your Rainmeter skin</li>
+                    <li>📄 <strong>Local HTML Files</strong> - Display custom HTML/CSS/JavaScript content</li>
+                    <li>🪟 <strong>Seamless Integration</strong> - WebView window automatically parents to skin window</li>
+                    <li>🎮 <strong>Full Control</strong> - Navigate, reload, go back/forward via bang commands</li>
+                    <li>💻 <strong>JavaScript Support</strong> - Full JavaScript execution with event handling</li>
+                    <li>🎨 <strong>Customizable</strong> - Configure size, position, and visibility</li>
+                    <li>⚡ <strong>Modern</strong> - Uses Microsoft Edge WebView2 (Chromium-based)</li>
+                    <li>🔌 <strong>Rainmeter API Bridge</strong> - Access Rainmeter functions from JavaScript</li>
+                </ul>
+            </section>
+
+            <section id="installation">
+                <h2>Installation</h2>
+                <p>To install the WebView2 plugin:</p>
+                <ol>
+                    <li>Download the latest release <code>.rmskin</code> package.</li>
+                    <li>Double-click to install.</li>
+                    <li>Alternatively, manually copy <code>WebView2.dll</code> to <code>%APPDATA%\Rainmeter\Plugins\</code>.</li>
+                </ol>
+                <p><strong>Requirement:</strong> Windows 10/11 and WebView2 Runtime (usually pre-installed).</p>
+            </section>
+
+            <section id="quick-start">
+                <h2>Quick Start</h2>
+                <p>Here is a basic example of how to use the plugin in your skin:</p>
+                <pre><code>[Rainmeter]
+Update=1000
+
+[MeasureWebView]
+Measure=Plugin
+Plugin=WebView2
+URL=https://www.google.com
+Width=1000
+Height=700
+X=0
+Y=0</code></pre>
+            </section>
+
+            <section id="plugin-options">
+                <h2>Plugin Options</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Option</th>
+                            <th>Type</th>
+                            <th>Default</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>URL</code></td>
+                            <td>String</td>
+                            <td>(empty)</td>
+                            <td>URL or file path to load. Supports web URLs and local file paths.</td>
+                        </tr>
+                        <tr>
+                            <td><code>Width</code></td>
+                            <td>Integer</td>
+                            <td>800</td>
+                            <td>Width of the WebView window in pixels.</td>
+                        </tr>
+                        <tr>
+                            <td><code>Height</code></td>
+                            <td>Integer</td>
+                            <td>600</td>
+                            <td>Height of the WebView window in pixels.</td>
+                        </tr>
+                        <tr>
+                            <td><code>X</code></td>
+                            <td>Integer</td>
+                            <td>0</td>
+                            <td>X position relative to skin window.</td>
+                        </tr>
+                        <tr>
+                            <td><code>Y</code></td>
+                            <td>Integer</td>
+                            <td>0</td>
+                            <td>Y position relative to skin window.</td>
+                        </tr>
+                        <tr>
+                            <td><code>Visible</code></td>
+                            <td>Integer</td>
+                            <td>1</td>
+                            <td>Show (1) or hide (0) the WebView window.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="bang-commands">
+                <h2>Bang Commands</h2>
+                <p>Control the WebView2 instance dynamically using <code>!CommandMeasure</code>.</p>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Command</th>
+                                <th>Arguments</th>
+                                <th>Description</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>Navigate</code></td>
+                                <td><code>url</code></td>
+                                <td>Navigates to the specified URL.</td>
+                                <td><code>[!CommandMeasure MeasureWebView "Navigate https://google.com"]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>Reload</code></td>
+                                <td>-</td>
+                                <td>Reloads the current page.</td>
+                                <td><code>[!CommandMeasure MeasureWebView "Reload"]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>GoBack</code></td>
+                                <td>-</td>
+                                <td>Navigates back in history.</td>
+                                <td><code>[!CommandMeasure MeasureWebView "GoBack"]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>GoForward</code></td>
+                                <td>-</td>
+                                <td>Navigates forward in history.</td>
+                                <td><code>[!CommandMeasure MeasureWebView "GoForward"]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>Show</code></td>
+                                <td>-</td>
+                                <td>Makes the WebView visible.</td>
+                                <td><code>[!CommandMeasure MeasureWebView "Show"]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>Hide</code></td>
+                                <td>-</td>
+                                <td>Hides the WebView.</td>
+                                <td><code>[!CommandMeasure MeasureWebView "Hide"]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>ExecuteScript</code></td>
+                                <td><code>script</code></td>
+                                <td>Executes JavaScript code.</td>
+                                <td><code>[!CommandMeasure MeasureWebView "ExecuteScript alert('Hi')"]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>OpenDevTools</code></td>
+                                <td>-</td>
+                                <td>Opens Edge DevTools.</td>
+                                <td><code>[!CommandMeasure MeasureWebView "OpenDevTools"]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>SetWidth</code></td>
+                                <td><code>pixels</code></td>
+                                <td>Sets the width.</td>
+                                <td><code>[!CommandMeasure MeasureWebView "SetWidth 500"]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>SetHeight</code></td>
+                                <td><code>pixels</code></td>
+                                <td>Sets the height.</td>
+                                <td><code>[!CommandMeasure MeasureWebView "SetHeight 400"]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>SetX</code></td>
+                                <td><code>pixels</code></td>
+                                <td>Sets X position.</td>
+                                <td><code>[!CommandMeasure MeasureWebView "SetX 100"]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>SetY</code></td>
+                                <td><code>pixels</code></td>
+                                <td>Sets Y position.</td>
+                                <td><code>[!CommandMeasure MeasureWebView "SetY 50"]</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="javascript-api">
+                <h2>JavaScript API Bridge</h2>
+                <p>The plugin automatically injects a global <code>rm</code> object into all loaded web pages, providing seamless access to Rainmeter API functions from JavaScript.</p>
+
+                <h3>Reading Options</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>rm.ReadString(option, default)</code></td>
+                            <td>Read a string option from the current measure. Returns Promise&lt;string&gt;.</td>
+                        </tr>
+                        <tr>
+                            <td><code>rm.ReadInt(option, default)</code></td>
+                            <td>Read an integer option from the current measure. Returns Promise&lt;number&gt;.</td>
+                        </tr>
+                        <tr>
+                            <td><code>rm.ReadDouble(option, default)</code></td>
+                            <td>Read a double/float option from the current measure. Returns Promise&lt;number&gt;.</td>
+                        </tr>
+                        <tr>
+                            <td><code>rm.ReadFormula(option, default)</code></td>
+                            <td>Read and evaluate a formula option. Returns Promise&lt;number&gt;.</td>
+                        </tr>
+                        <tr>
+                            <td><code>rm.ReadPath(option, default)</code></td>
+                            <td>Read a file path option from the current measure. Returns Promise&lt;string&gt;.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Utility Functions</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>rm.ReplaceVariables(text)</code></td>
+                            <td>Replace Rainmeter variables in text (e.g., <code>#CURRENTCONFIG#</code>). Returns Promise&lt;string&gt;.</td>
+                        </tr>
+                        <tr>
+                            <td><code>rm.PathToAbsolute(path)</code></td>
+                            <td>Convert relative path to absolute path. Returns Promise&lt;string&gt;.</td>
+                        </tr>
+                        <tr>
+                            <td><code>rm.Execute(command)</code></td>
+                            <td>Execute a Rainmeter bang command. Void.</td>
+                        </tr>
+                        <tr>
+                            <td><code>rm.Log(message, level)</code></td>
+                            <td>Log a message to Rainmeter log. Levels: 'Notice', 'Warning', 'Error', 'Debug'. Void.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Information Properties</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Returns</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>rm.MeasureName</code></td>
+                            <td>Promise&lt;string&gt;</td>
+                            <td>Get the name of the current measure.</td>
+                        </tr>
+                        <tr>
+                            <td><code>rm.SkinName</code></td>
+                            <td>Promise&lt;string&gt;</td>
+                            <td>Get the name of the current skin.</td>
+                        </tr>
+                        <tr>
+                            <td><code>rm.SkinWindowHandle</code></td>
+                            <td>Promise&lt;string&gt;</td>
+                            <td>Get the window handle of the skin.</td>
+                        </tr>
+                        <tr>
+                            <td><code>rm.SettingsFile</code></td>
+                            <td>Promise&lt;string&gt;</td>
+                            <td>Get the path to Rainmeter settings file.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p><strong>Important Notes:</strong></p>
+                <ul>
+                    <li>✅ All read methods return <strong>Promises</strong> and should be used with <code>await</code> or <code>.then()</code>.</li>
+                    <li>✅ Execute and Log methods are <strong>fire-and-forget</strong> (no return value).</li>
+                    <li>✅ Property getters also return <strong>Promises</strong>.</li>
+                </ul>
+            </section>
+
+            <section id="examples">
+                <h2>Examples</h2>
+                <h3>Local HTML Dashboard</h3>
+                <p>Create <code>@Resources\dashboard.html</code>:</p>
+                <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;style&gt;
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;My Dashboard&lt;/h1&gt;
+    &lt;p&gt;Time: &lt;span id="clock"&gt;&lt;/span&gt;&lt;/p&gt;
+    &lt;script&gt;
+        setInterval(() =&gt; {
+            document.getElementById('clock').textContent = 
+                new Date().toLocaleTimeString();
+        }, 1000);
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            </section>
+        </main>
+    </div>
+
+    <script src="docs.js"></script>
+</body>
+</html>
