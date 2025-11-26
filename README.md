@@ -64,8 +64,16 @@ Height=600
 | `X` | X position offset in pixels | 0 | No |
 | `Y` | Y position offset in pixels | 0 | No |
 | `Hidden` | Hide the WebView on load (0 = visible, 1 = hidden) | 0 | No |
+| `DynamicVariables` | Enable dynamic variable updates (0 or 1) | 0 | No |
 
-**Note**: Transparent background is always enabled by default. Developer tools (F12) are always available.
+**Notes**: 
+- Transparent background is always enabled by default. Developer tools (F12) are always available.
+- When `DynamicVariables=1`, the plugin intelligently handles updates:
+  - **URL changes**: Navigates to the new URL without recreating the WebView
+  - **Dimension/Position changes** (`W`, `H`, `X`, `Y`): Applied instantly without flickering
+  - **Visibility changes** (`Hidden`): Applied instantly
+  - The WebView is only created once on first load, preventing flickering issues
+
 
 ### Bang Commands
 
@@ -77,13 +85,7 @@ Execute commands from your skin using `[!CommandMeasure MeasureName "Command"]`:
 | `Reload` | Reload the current page | `[!CommandMeasure MeasureWebView "Reload"]` |
 | `GoBack` | Navigate to the previous page in history | `[!CommandMeasure MeasureWebView "GoBack"]` |
 | `GoForward` | Navigate to the next page in history | `[!CommandMeasure MeasureWebView "GoForward"]` |
-| `Show` | Make the WebView visible | `[!CommandMeasure MeasureWebView "Show"]` |
-| `Hide` | Hide the WebView | `[!CommandMeasure MeasureWebView "Hide"]` |
 | `ExecuteScript <script>` | Execute JavaScript code in the WebView | `[!CommandMeasure MeasureWebView "ExecuteScript alert('Hello')"]` |
-| `SetW <width>` | Set the width of the WebView in pixels | `[!CommandMeasure MeasureWebView "SetW 1024"]` |
-| `SetH <height>` | Set the height of the WebView in pixels | `[!CommandMeasure MeasureWebView "SetH 768"]` |
-| `SetX <x>` | Set the X position offset in pixels | `[!CommandMeasure MeasureWebView "SetX 100"]` |
-| `SetY <y>` | Set the Y position offset in pixels | `[!CommandMeasure MeasureWebView "SetY 50"]` |
 | `OpenDevTools` | Open the browser developer tools (F12) | `[!CommandMeasure MeasureWebView "OpenDevTools"]` |
 
 ## 🔌 JavaScript API
