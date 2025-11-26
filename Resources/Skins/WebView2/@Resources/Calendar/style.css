@@ -1,0 +1,185 @@
+:root {
+    --bg-color: #0f0f13;
+    --text-primary: #ffffff;
+    --text-secondary: #a0a0a0;
+    --accent-color: #4facfe;
+    --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --day-hover: rgba(255, 255, 255, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: transparent;
+    font-family: 'Outfit', sans-serif;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    user-select: none; /* Prevent text selection */
+}
+
+.widget-container {
+    position: relative;
+    width: 280px;
+    height: 320px; /* Reduced from 380px */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Abstract Background Shapes */
+.bg-shape {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(30px); /* Reduced blur */
+    opacity: 0.6;
+    z-index: 0;
+}
+
+.shape-1 {
+    width: 160px; /* Reduced from 200px */
+    height: 160px;
+    background: #764ba2;
+    top: -15px;
+    left: -15px;
+    animation: float 10s infinite ease-in-out;
+}
+
+.shape-2 {
+    width: 140px; /* Reduced from 180px */
+    height: 140px;
+    background: #4facfe;
+    bottom: -15px;
+    right: -15px;
+    animation: float 12s infinite ease-in-out reverse;
+}
+
+@keyframes float {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(15px, 15px); } /* Reduced movement */
+}
+
+/* Glass Card */
+.calendar-card {
+    position: relative;
+    z-index: 1;
+    width: 90%;
+    height: 90%;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 18px; /* Reduced from 24px */
+    padding: 15px; /* Reduced from 20px */
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px; /* Reduced from 20px */
+    color: var(--text-primary);
+}
+
+.month-year {
+    font-size: 0.95rem; /* Reduced from 1.2rem */
+    font-weight: 600;
+    text-transform: capitalize;
+    display: flex;
+    gap: 4px; /* Reduced from 5px */
+}
+
+#current-year {
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+.nav-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1rem; /* Reduced from 1.2rem */
+    cursor: pointer;
+    padding: 4px; /* Reduced from 5px */
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-btn:hover {
+    background: var(--glass-border);
+    color: var(--text-primary);
+}
+
+/* Body */
+.calendar-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    margin-bottom: 6px; /* Reduced from 10px */
+}
+
+.weekdays span {
+    font-size: 0.7rem; /* Reduced from 0.85rem */
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px; /* Reduced from 5px */
+    text-align: center;
+}
+
+.days div {
+    font-size: 0.8rem; /* Reduced from 0.95rem */
+    color: var(--text-primary);
+    width: 100%;
+    aspect-ratio: 1; /* Make them square */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* States */
+.days div:hover:not(.empty) {
+    background-color: var(--day-hover);
+}
+
+.days div.today {
+    background: var(--accent-gradient);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+}
+
+.days div.prev-date,
+.days div.next-date {
+    color: rgba(255, 255, 255, 0.2);
+    pointer-events: none;
+}

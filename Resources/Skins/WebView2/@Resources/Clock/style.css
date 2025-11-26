@@ -1,0 +1,172 @@
+:root {
+    --bg-color: #0f0f13;
+    --text-primary: #ffffff;
+    --text-secondary: #a0a0a0;
+    --blob-color-1: #4facfe;
+    --blob-color-2: #00f2fe;
+    --blob-color-3: #a18cd1;
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: transparent; /* Transparent for widget usage */
+    font-family: 'Outfit', sans-serif;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.widget-container {
+    position: relative;
+    width: 350px;
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Liquid Background */
+.liquid-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    filter: url('#goo'); /* The gooey magic */
+    z-index: 0;
+}
+
+.blob {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.8;
+    animation: move 8s infinite alternate;
+}
+
+.blob-1 {
+    width: 120px;
+    height: 120px;
+    background: var(--blob-color-1);
+    top: 20px;
+    left: 40px;
+    animation-delay: 0s;
+}
+
+.blob-2 {
+    width: 150px;
+    height: 150px;
+    background: var(--blob-color-2);
+    bottom: 20px;
+    right: 40px;
+    animation-delay: -2s;
+}
+
+.blob-3 {
+    width: 100px;
+    height: 100px;
+    background: var(--blob-color-3);
+    bottom: 40px;
+    left: 80px;
+    animation-delay: -4s;
+}
+
+@keyframes move {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+    33% {
+        transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+        transform: translate(-20px, 20px) scale(0.9);
+    }
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+}
+
+/* Glass Panel */
+.glass-panel {
+    position: relative;
+    z-index: 1;
+    width: 90%;
+    height: 80%;
+    background: var(--glass-bg);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.clock-content {
+    text-align: center;
+    color: var(--text-primary);
+}
+
+.time-wrapper {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    line-height: 1;
+    margin-bottom: 5px;
+}
+
+#hours, #minutes {
+    font-size: 4rem;
+    font-weight: 700;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.colon {
+    font-size: 3rem;
+    font-weight: 300;
+    margin: 0 5px;
+    animation: blink 1s infinite;
+}
+
+.seconds-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-left: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+#seconds {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+}
+
+#ampm {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    margin-top: 2px;
+}
+
+.date {
+    font-size: 1rem;
+    font-weight: 300;
+    color: var(--text-secondary);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}

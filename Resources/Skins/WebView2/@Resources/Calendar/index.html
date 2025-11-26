@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glass Calendar Widget</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons for arrows -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+    <div class="widget-container">
+        <!-- Background Elements -->
+        <div class="bg-shape shape-1"></div>
+        <div class="bg-shape shape-2"></div>
+
+        <div class="calendar-card">
+            <div class="calendar-header">
+                <button id="prev-month" class="nav-btn"><i class="ph ph-caret-left"></i></button>
+                <div class="month-year">
+                    <span id="current-month">Month</span>
+                    <span id="current-year">Year</span>
+                </div>
+                <button id="next-month" class="nav-btn"><i class="ph ph-caret-right"></i></button>
+            </div>
+            
+            <div class="calendar-body">
+                <div class="weekdays">
+                    <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                </div>
+                <div class="days" id="calendar-days">
+                    <!-- Days will be injected here via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
