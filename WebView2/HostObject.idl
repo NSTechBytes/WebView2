@@ -11,22 +11,23 @@ library WebView2Library
     interface IHostObjectRmAPI : IUnknown
     {
         // Basic option reading
-        HRESULT ReadString([in] BSTR option, [in] BSTR defaultValue, [out, retval] BSTR* result);
-        HRESULT ReadInt([in] BSTR option, [in] int defaultValue, [out, retval] int* result);
-        HRESULT ReadDouble([in] BSTR option, [in] double defaultValue, [out, retval] double* result);
-        HRESULT ReadFormula([in] BSTR option, [in] double defaultValue, [out, retval] double* result);
-        HRESULT ReadPath([in] BSTR option, [in] BSTR defaultValue, [out, retval] BSTR* result);
+        HRESULT ReadString([in] BSTR option, [in, optional] VARIANT defaultValue, [out, retval] BSTR* result);
+        HRESULT ReadInt([in] BSTR option, [in, optional] VARIANT defaultValue, [out, retval] int* result);
+        HRESULT ReadDouble([in] BSTR option, [in, optional] VARIANT defaultValue, [out, retval] double* result);
+        HRESULT ReadFormula([in] BSTR option, [in, optional] VARIANT defaultValue, [out, retval] double* result);
+        HRESULT ReadPath([in] BSTR option, [in, optional] VARIANT defaultValue, [out, retval] BSTR* result);
         
         // Section reading
-        HRESULT ReadStringFromSection([in] BSTR section, [in] BSTR option, [in] BSTR defaultValue, [out, retval] BSTR* result);
-        HRESULT ReadIntFromSection([in] BSTR section, [in] BSTR option, [in] int defaultValue, [out, retval] int* result);
-        HRESULT ReadDoubleFromSection([in] BSTR section, [in] BSTR option, [in] double defaultValue, [out, retval] double* result);
-        HRESULT ReadFormulaFromSection([in] BSTR section, [in] BSTR option, [in] double defaultValue, [out, retval] double* result);
+        HRESULT ReadStringFromSection([in] BSTR section, [in] BSTR option, [in, optional] VARIANT defaultValue, [out, retval] BSTR* result);
+        HRESULT ReadIntFromSection([in] BSTR section, [in] BSTR option, [in, optional] VARIANT defaultValue, [out, retval] int* result);
+        HRESULT ReadDoubleFromSection([in] BSTR section, [in] BSTR option, [in, optional] VARIANT defaultValue, [out, retval] double* result);
+        HRESULT ReadFormulaFromSection([in] BSTR section, [in] BSTR option, [in, optional] VARIANT defaultValue, [out, retval] double* result);
         
         // Utility functions
         HRESULT ReplaceVariables([in] BSTR text, [out, retval] BSTR* result);
+        HRESULT GetVariable([in] BSTR variableName, [out, retval] BSTR* result);
         HRESULT PathToAbsolute([in] BSTR path, [out, retval] BSTR* result);
-        HRESULT Execute([in] BSTR command);
+        HRESULT Bang([in] BSTR command);
         HRESULT Log([in] BSTR message, [in] BSTR level);
         
         // Properties

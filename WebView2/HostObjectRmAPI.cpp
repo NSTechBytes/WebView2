@@ -9,50 +9,174 @@ HostObjectRmAPI::HostObjectRmAPI(Measure* m, wil::com_ptr<ITypeLib> tLib)
 }
 
 // Basic option reading
-STDMETHODIMP HostObjectRmAPI::ReadString(BSTR option, BSTR defaultValue, BSTR* result)
+STDMETHODIMP HostObjectRmAPI::ReadString(BSTR option, VARIANT defaultValue, BSTR* result)
 {
     if (!option || !result || !rm)
         return E_INVALIDARG;
     
-    LPCWSTR value = RmReadString(rm, option, defaultValue ? defaultValue : L"", TRUE);
+    // Handle optional default value
+    LPCWSTR defValue = L"";
+    if (defaultValue.vt == VT_BSTR && defaultValue.bstrVal != nullptr)
+    {
+        defValue = defaultValue.bstrVal;
+    }
+    else if (defaultValue.vt != VT_ERROR && defaultValue.vt != VT_EMPTY)
+    {
+        // Try to convert to string if it's another type
+        VARIANT converted;
+        VariantInit(&converted);
+        if (SUCCEEDED(VariantChangeType(&converted, &defaultValue, 0, VT_BSTR)))
+        {
+            defValue = converted.bstrVal;
+            LPCWSTR value = RmReadString(rm, option, defValue, TRUE);
+            *result = SysAllocString(value ? value : L"");
+            VariantClear(&converted);
+            return S_OK;
+        }
+    }
+    
+    LPCWSTR value = RmReadString(rm, option, defValue, TRUE);
     *result = SysAllocString(value ? value : L"");
     return S_OK;
 }
 
-STDMETHODIMP HostObjectRmAPI::ReadInt(BSTR option, int defaultValue, int* result)
+STDMETHODIMP HostObjectRmAPI::ReadInt(BSTR option, VARIANT defaultValue, int* result)
 {
     if (!option || !result || !rm)
         return E_INVALIDARG;
     
-    double value = RmReadFormula(rm, option, defaultValue);
+    // Handle optional default value
+    int defValue = 0;
+    if (defaultValue.vt == VT_I4)
+    {
+        defValue = defaultValue.lVal;
+    }
+    else if (defaultValue.vt == VT_I2)
+    {
+        defValue = defaultValue.iVal;
+    }
+    else if (defaultValue.vt != VT_ERROR && defaultValue.vt != VT_EMPTY)
+    {
+        // Try to convert to int
+        VARIANT converted;
+        VariantInit(&converted);
+        if (SUCCEEDED(VariantChangeType(&converted, &defaultValue, 0, VT_I4)))
+        {
+            defValue = converted.lVal;
+        }
+        VariantClear(&converted);
+    }
+    
+    double value = RmReadFormula(rm, option, defValue);
     *result = static_cast<int>(value);
     return S_OK;
 }
 
-STDMETHODIMP HostObjectRmAPI::ReadDouble(BSTR option, double defaultValue, double* result)
+STDMETHODIMP HostObjectRmAPI::ReadDouble(BSTR option, VARIANT defaultValue, double* result)
 {
     if (!option || !result || !rm)
         return E_INVALIDARG;
     
-    *result = RmReadFormula(rm, option, defaultValue);
+    // Handle optional default value
+    double defValue = 0.0;
+    if (defaultValue.vt == VT_R8)
+    {
+        defValue = defaultValue.dblVal;
+    }
+    else if (defaultValue.vt == VT_R4)
+    {
+        defValue = defaultValue.fltVal;
+    }
+    else if (defaultValue.vt == VT_I4)
+    {
+        defValue = static_cast<double>(defaultValue.lVal);
+    }
+    else if (defaultValue.vt != VT_ERROR && defaultValue.vt != VT_EMPTY)
+    {
+        // Try to convert to double
+        VARIANT converted;
+        VariantInit(&converted);
+        if (SUCCEEDED(VariantChangeType(&converted, &defaultValue, 0, VT_R8)))
+        {
+            defValue = converted.dblVal;
+        }
+        VariantClear(&converted);
+    }
+    
+    *result = RmReadFormula(rm, option, defValue);
     return S_OK;
 }
 
-STDMETHODIMP HostObjectRmAPI::ReadFormula(BSTR option, double defaultValue, double* result)
+STDMETHODIMP HostObjectRmAPI::ReadFormula(BSTR option, VARIANT defaultValue, double* result)
 {
     if (!option || !result || !rm)
         return E_INVALIDARG;
     
-    *result = RmReadFormula(rm, option, defaultValue);
+    // Handle optional default value
+    double defValue = 0.0;
+    if (defaultValue.vt == VT_R8)
+    {
+        defValue = defaultValue.dblVal;
+    }
+    else if (defaultValue.vt == VT_R4)
+    {
+        defValue = defaultValue.fltVal;
+    }
+    else if (defaultValue.vt == VT_I4)
+    {
+        defValue = static_cast<double>(defaultValue.lVal);
+    }
+    else if (defaultValue.vt != VT_ERROR && defaultValue.vt != VT_EMPTY)
+    {
+        // Try to convert to double
+        VARIANT converted;
+        VariantInit(&converted);
+        if (SUCCEEDED(VariantChangeType(&converted, &defaultValue, 0, VT_R8)))
+        {
+            defValue = converted.dblVal;
+        }
+        VariantClear(&converted);
+    }
+    
+    *result = RmReadFormula(rm, option, defValue);
     return S_OK;
 }
 
-STDMETHODIMP HostObjectRmAPI::ReadPath(BSTR option, BSTR defaultValue, BSTR* result)
+STDMETHODIMP HostObjectRmAPI::ReadPath(BSTR option, VARIANT defaultValue, BSTR* result)
 {
     if (!option || !result || !rm)
         return E_INVALIDARG;
     
-    LPCWSTR value = RmReadString(rm, option, defaultValue ? defaultValue : L"", TRUE);
+    // Handle optional default value
+    LPCWSTR defValue = L"";
+    if (defaultValue.vt == VT_BSTR && defaultValue.bstrVal != nullptr)
+    {
+        defValue = defaultValue.bstrVal;
+    }
+    else if (defaultValue.vt != VT_ERROR && defaultValue.vt != VT_EMPTY)
+    {
+        // Try to convert to string
+        VARIANT converted;
+        VariantInit(&converted);
+        if (SUCCEEDED(VariantChangeType(&converted, &defaultValue, 0, VT_BSTR)))
+        {
+            defValue = converted.bstrVal;
+            LPCWSTR value = RmReadString(rm, option, defValue, TRUE);
+            if (value)
+            {
+                LPCWSTR absolutePath = RmPathToAbsolute(rm, value);
+                *result = SysAllocString(absolutePath ? absolutePath : value);
+            }
+            else
+            {
+                *result = SysAllocString(L"");
+            }
+            VariantClear(&converted);
+            return S_OK;
+        }
+    }
+    
+    LPCWSTR value = RmReadString(rm, option, defValue, TRUE);
     if (value)
     {
         LPCWSTR absolutePath = RmPathToAbsolute(rm, value);
@@ -66,41 +190,89 @@ STDMETHODIMP HostObjectRmAPI::ReadPath(BSTR option, BSTR defaultValue, BSTR* res
 }
 
 // Section reading
-STDMETHODIMP HostObjectRmAPI::ReadStringFromSection(BSTR section, BSTR option, BSTR defaultValue, BSTR* result)
+STDMETHODIMP HostObjectRmAPI::ReadStringFromSection(BSTR section, BSTR option, VARIANT defaultValue, BSTR* result)
 {
     if (!section || !option || !result || !rm)
         return E_INVALIDARG;
+    
+    // Handle optional default value
+    LPCWSTR defValue = L"";
+    if (defaultValue.vt == VT_BSTR && defaultValue.bstrVal != nullptr)
+    {
+        defValue = defaultValue.bstrVal;
+    }
     
     // Note: Rainmeter API doesn't have direct section reading, so we'd need to implement this differently
-    // For now, return empty string
-    *result = SysAllocString(defaultValue ? defaultValue : L"");
+    // For now, return default value
+    *result = SysAllocString(defValue);
     return S_OK;
 }
 
-STDMETHODIMP HostObjectRmAPI::ReadIntFromSection(BSTR section, BSTR option, int defaultValue, int* result)
+STDMETHODIMP HostObjectRmAPI::ReadIntFromSection(BSTR section, BSTR option, VARIANT defaultValue, int* result)
 {
     if (!section || !option || !result || !rm)
         return E_INVALIDARG;
     
-    *result = defaultValue;
+    // Handle optional default value
+    int defValue = 0;
+    if (defaultValue.vt == VT_I4)
+    {
+        defValue = defaultValue.lVal;
+    }
+    else if (defaultValue.vt == VT_I2)
+    {
+        defValue = defaultValue.iVal;
+    }
+    
+    *result = defValue;
     return S_OK;
 }
 
-STDMETHODIMP HostObjectRmAPI::ReadDoubleFromSection(BSTR section, BSTR option, double defaultValue, double* result)
+STDMETHODIMP HostObjectRmAPI::ReadDoubleFromSection(BSTR section, BSTR option, VARIANT defaultValue, double* result)
 {
     if (!section || !option || !result || !rm)
         return E_INVALIDARG;
     
-    *result = defaultValue;
+    // Handle optional default value
+    double defValue = 0.0;
+    if (defaultValue.vt == VT_R8)
+    {
+        defValue = defaultValue.dblVal;
+    }
+    else if (defaultValue.vt == VT_R4)
+    {
+        defValue = defaultValue.fltVal;
+    }
+    else if (defaultValue.vt == VT_I4)
+    {
+        defValue = static_cast<double>(defaultValue.lVal);
+    }
+    
+    *result = defValue;
     return S_OK;
 }
 
-STDMETHODIMP HostObjectRmAPI::ReadFormulaFromSection(BSTR section, BSTR option, double defaultValue, double* result)
+STDMETHODIMP HostObjectRmAPI::ReadFormulaFromSection(BSTR section, BSTR option, VARIANT defaultValue, double* result)
 {
     if (!section || !option || !result || !rm)
         return E_INVALIDARG;
     
-    *result = defaultValue;
+    // Handle optional default value
+    double defValue = 0.0;
+    if (defaultValue.vt == VT_R8)
+    {
+        defValue = defaultValue.dblVal;
+    }
+    else if (defaultValue.vt == VT_R4)
+    {
+        defValue = defaultValue.fltVal;
+    }
+    else if (defaultValue.vt == VT_I4)
+    {
+        defValue = static_cast<double>(defaultValue.lVal);
+    }
+    
+    *result = defValue;
     return S_OK;
 }
 
@@ -115,6 +287,19 @@ STDMETHODIMP HostObjectRmAPI::ReplaceVariables(BSTR text, BSTR* result)
     return S_OK;
 }
 
+STDMETHODIMP HostObjectRmAPI::GetVariable(BSTR variableName, BSTR* result)
+{
+    if (!variableName || !result || !rm)
+        return E_INVALIDARG;
+    
+    // Wrap variable name with # syntax
+    std::wstring wrappedVar = L"#" + std::wstring(variableName) + L"#";
+    
+    LPCWSTR value = RmReplaceVariables(rm, wrappedVar.c_str());
+    *result = SysAllocString(value ? value : L"");
+    return S_OK;
+}
+
 STDMETHODIMP HostObjectRmAPI::PathToAbsolute(BSTR path, BSTR* result)
 {
     if (!path || !result || !rm)
@@ -125,7 +310,7 @@ STDMETHODIMP HostObjectRmAPI::PathToAbsolute(BSTR path, BSTR* result)
     return S_OK;
 }
 
-STDMETHODIMP HostObjectRmAPI::Execute(BSTR command)
+STDMETHODIMP HostObjectRmAPI::Bang(BSTR command)
 {
     if (!command || !skin)
         return E_INVALIDARG;

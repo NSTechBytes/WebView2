@@ -92,9 +92,16 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
     {
         std::wstring urlStr = urlOption;
         
-        // Convert file paths to file:/// URLs
-        if (urlStr.find(L"://") == std::wstring::npos)
+        // Check if it's a web URL (http://, https://, etc.)
+        if (urlStr.find(L"://") != std::wstring::npos)
         {
+            // Already has a protocol - use as-is
+            // This handles: http://, https://, file:///, etc.
+            measure->url = urlStr;
+        }
+        else
+        {
+            // No protocol found - treat as file path
             // Check if it's a relative path or absolute path
             if (urlStr[0] != L'/' && (urlStr.length() < 2 || urlStr[1] != L':'))
             {
@@ -112,13 +119,12 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
                 if (urlStr[i] == L'\\') urlStr[i] = L'/';
             }
             
-            // Add file:/// prefix
-            urlStr = L"file:///" + urlStr;
+            // Add file:/// prefix if not already present
+            if (urlStr.find(L"file:///") != 0)
+            {
+                urlStr = L"file:///" + urlStr;
+            }
             
-            measure->url = urlStr;
-        }
-        else
-        {
             measure->url = urlStr;
         }
     }
@@ -129,8 +135,8 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
     measure->x = RmReadInt(rm, L"X", 0);
     measure->y = RmReadInt(rm, L"Y", 0);
     
-    // Read visibility
-    measure->visible = RmReadInt(rm, L"Visible", 1) != 0;
+    // Read visibility (Hidden option - inverse of Visible)
+    measure->visible = RmReadInt(rm, L"Hidden", 0) == 0;
     
     // Always create fresh WebView2 instance on every Reload
     // This matches the stable PluginWebView-main pattern and prevents race conditions

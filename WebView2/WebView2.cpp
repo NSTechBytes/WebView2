@@ -134,12 +134,12 @@ HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller
     VARIANT variant = {};
     hostObject.query_to<IDispatch>(&variant.pdispVal);
     variant.vt = VT_DISPATCH;
-    webView->AddHostObjectToScript(L"rm", &variant);
+    webView->AddHostObjectToScript(L"RainmeterAPI", &variant);
     variant.pdispVal->Release();
     
-    // Add script to make rm available globally
+    // Add script to make RainmeterAPI available globally
     webView->AddScriptToExecuteOnDocumentCreated(
-        L"window.rm = chrome.webview.hostObjects.sync.rm",
+        L"window.RainmeterAPI = chrome.webview.hostObjects.sync.RainmeterAPI",
         nullptr
     );
     
