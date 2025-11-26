@@ -428,3 +428,9 @@ FodyWeavers.xsd
 *.msp
 
 dist
+
+# Ignore all @Backup folders
+**/@Backup/
+
+# Ignore all @Vault folders
+**/@Vault/

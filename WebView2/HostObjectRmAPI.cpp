@@ -202,9 +202,9 @@ STDMETHODIMP HostObjectRmAPI::ReadStringFromSection(BSTR section, BSTR option, V
         defValue = defaultValue.bstrVal;
     }
     
-    // Note: Rainmeter API doesn't have direct section reading, so we'd need to implement this differently
-    // For now, return default value
-    *result = SysAllocString(defValue);
+    LPCWSTR value = RmReadStringFromSection(rm, section, option, defValue, TRUE);
+    *result = SysAllocString(value ? value : L"");
+    
     return S_OK;
 }
 
@@ -215,16 +215,12 @@ STDMETHODIMP HostObjectRmAPI::ReadIntFromSection(BSTR section, BSTR option, VARI
     
     // Handle optional default value
     int defValue = 0;
-    if (defaultValue.vt == VT_I4)
-    {
-        defValue = defaultValue.lVal;
-    }
-    else if (defaultValue.vt == VT_I2)
-    {
-        defValue = defaultValue.iVal;
-    }
+    if (defaultValue.vt == VT_I4) defValue = defaultValue.lVal;
+    else if (defaultValue.vt == VT_I2) defValue = defaultValue.iVal;
     
-    *result = defValue;
+    double value = RmReadFormulaFromSection(rm, section, option, (double)defValue);
+    *result = (int)value;
+    
     return S_OK;
 }
 
@@ -235,20 +231,11 @@ STDMETHODIMP HostObjectRmAPI::ReadDoubleFromSection(BSTR section, BSTR option, V
     
     // Handle optional default value
     double defValue = 0.0;
-    if (defaultValue.vt == VT_R8)
-    {
-        defValue = defaultValue.dblVal;
-    }
-    else if (defaultValue.vt == VT_R4)
-    {
-        defValue = defaultValue.fltVal;
-    }
-    else if (defaultValue.vt == VT_I4)
-    {
-        defValue = static_cast<double>(defaultValue.lVal);
-    }
+    if (defaultValue.vt == VT_R8) defValue = defaultValue.dblVal;
+    else if (defaultValue.vt == VT_R4) defValue = defaultValue.fltVal;
+    else if (defaultValue.vt == VT_I4) defValue = static_cast<double>(defaultValue.lVal);
     
-    *result = defValue;
+    *result = RmReadFormulaFromSection(rm, section, option, defValue);
     return S_OK;
 }
 

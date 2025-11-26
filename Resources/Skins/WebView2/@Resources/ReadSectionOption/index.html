@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReadSectionOption Demo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1>Section Reader</h1>
+
+    <div class="container">
+        <!-- Variable Reader -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Variable</span>
+                <span class="card-subtitle">[Variables] TestVar</span>
+            </div>
+            <div id="var-output" class="value-display">Waiting...</div>
+            <div id="var-status" class="status"></div>
+        </div>
+
+        <!-- Measure Reader -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Measure String</span>
+                <span class="card-subtitle">[MeasureTest] String</span>
+            </div>
+            <div id="measure-output" class="value-display">Waiting...</div>
+            <div id="measure-status" class="status"></div>
+        </div>
+
+        <!-- Measure Int Reader -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Measure Int</span>
+                <span class="card-subtitle">[MeasureCalc] (Int)</span>
+            </div>
+            <div id="measure-int-output" class="value-display">Waiting...</div>
+            <div id="measure-int-status" class="status"></div>
+        </div>
+
+        <!-- Variable Double Reader -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Variable Double</span>
+                <span class="card-subtitle">[Variables] DoubleExample</span>
+            </div>
+            <div id="var-double-output" class="value-display">Waiting...</div>
+            <div id="var-double-status" class="status"></div>
+        </div>
+    </div>
+
+    <button class="btn" onclick="refreshValues()">Refresh Values</button>
+    <script src="script.js"></script>
+</body>
+
+</html>
