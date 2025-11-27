@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Islamic Date Widget</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+    <div class="widget-container">
+        <!-- Background Elements -->
+        <div class="shape-container">
+            <div class="bg-shape shape-1"></div>
+            <div class="bg-shape shape-2"></div>
+            <div class="bg-shape shape-3"></div>
+        </div>
+
+        <div class="islamic-card">
+            <div class="content-wrapper">
+                <!-- Icon and Day Row -->
+                <div class="top-row">
+                    <div class="icon-container">
+                        <i class="ph ph-moon-stars"></i>
+                    </div>
+                    <div class="hijri-day" id="hijri-day">1</div>
+                </div>
+
+                <!-- Month and Year -->
+                <div class="hijri-month" id="hijri-month">Muharram</div>
+                <div class="hijri-year" id="hijri-year">1446 AH</div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
