@@ -221,10 +221,9 @@ PLUGIN_EXPORT double Update(void* data)
                             measure->callbackResult = result;
                         }
                         
-                        // Trigger Rainmeter update after callback completes to sync values
-                        if (measure->rm)
+                        // Trigger Rainmeter redraw after callback completes
+                        if (measure->skin)
                         {
-                            RmExecute(measure->skin, L"!UpdateMeasure #CURRENTSECTION#");
                             RmExecute(measure->skin, L"!UpdateMeter *");
                             RmExecute(measure->skin, L"!Redraw");
                         }
@@ -242,19 +241,13 @@ PLUGIN_EXPORT LPCWSTR GetString(void* data)
 {
     Measure* measure = (Measure*)data;
     
-    // Return the callback result if available, otherwise return status
+    // Return the callback result if available, otherwise return "0"
     if (!measure->callbackResult.empty())
     {
         return measure->callbackResult.c_str();
     }
-    else if (measure->initialized)
-    {
-        return L"WebView2 Initialized";
-    }
-    else
-    {
-        return L"WebView2 Initializing...";
-    }
+    
+    return L"0";
 }
 
 PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args)
@@ -374,14 +367,14 @@ PLUGIN_EXPORT LPCWSTR CallJS(void* data, const int argc, const WCHAR* argv[])
         ).Get()
     );
     
-    // Return cached result if available, otherwise "Calling..."
+    // Return cached result if available, otherwise "0"
     if (measure->jsResults.find(key) != measure->jsResults.end())
     {
         measure->buffer = measure->jsResults[key];
     }
     else
     {
-        measure->buffer = L"Calling...";
+        measure->buffer = L"0";
     }
     
     return measure->buffer.c_str();

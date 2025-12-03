@@ -143,6 +143,49 @@ HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller
         nullptr
     );
     
+    // Add NavigationCompleted event to call OnInitialize after page loads
+    webView->add_NavigationCompleted(
+        Callback<ICoreWebView2NavigationCompletedEventHandler>(
+            [this](ICoreWebView2* sender, ICoreWebView2NavigationCompletedEventArgs* args) -> HRESULT
+            {
+                // Call JavaScript OnInitialize callback if it exists and capture return value
+                webView->ExecuteScript(
+                    L"(function() { if (typeof window.OnInitialize === 'function') { var result = window.OnInitialize(); return result !== undefined ? String(result) : ''; } return ''; })();",
+                    Callback<ICoreWebView2ExecuteScriptCompletedHandler>(
+                        [this](HRESULT errorCode, LPCWSTR resultObjectAsJson) -> HRESULT
+                        {
+                            if (SUCCEEDED(errorCode) && resultObjectAsJson)
+                            {
+                                // Remove quotes from JSON string result
+                                std::wstring result = resultObjectAsJson;
+                                if (result.length() >= 2 && result.front() == L'"' && result.back() == L'"')
+                                {
+                                    result = result.substr(1, result.length() - 2);
+                                }
+                                
+                                // Store the callback result
+                                if (!result.empty() && result != L"null")
+                                {
+                                    callbackResult = result;
+                                    
+                                    // Trigger Rainmeter redraw after callback completes
+                                    if (skin)
+                                    {
+                                        RmExecute(skin, L"!UpdateMeter *");
+                                        RmExecute(skin, L"!Redraw");
+                                    }
+                                }
+                            }
+                            return S_OK;
+                        }
+                    ).Get()
+                );
+                return S_OK;
+            }
+        ).Get(),
+        nullptr
+    );
+    
     // Navigate to URL
     if (!url.empty())
     {
@@ -153,32 +196,6 @@ HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller
     
     if (rm)
         RmLog(rm, LOG_NOTICE, L"WebView2: Initialized successfully with COM Host Objects");
-    
-    // Call JavaScript OnInitialize callback if it exists and capture return value
-    webView->ExecuteScript(
-        L"(function() { if (typeof window.OnInitialize === 'function') { var result = window.OnInitialize(); return result !== undefined ? String(result) : ''; } return ''; })();",
-        Callback<ICoreWebView2ExecuteScriptCompletedHandler>(
-            [this](HRESULT errorCode, LPCWSTR resultObjectAsJson) -> HRESULT
-            {
-                if (SUCCEEDED(errorCode) && resultObjectAsJson)
-                {
-                    // Remove quotes from JSON string result
-                    std::wstring result = resultObjectAsJson;
-                    if (result.length() >= 2 && result.front() == L'"' && result.back() == L'"')
-                    {
-                        result = result.substr(1, result.length() - 2);
-                    }
-                    
-                    // Store the callback result
-                    if (!result.empty() && result != L"null")
-                    {
-                        callbackResult = result;
-                    }
-                }
-                return S_OK;
-            }
-        ).Get()
-    );
     
     return S_OK;
 }
