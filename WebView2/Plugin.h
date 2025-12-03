@@ -3,6 +3,7 @@
 
 #include <Windows.h>
 #include <string>
+#include <map>
 #include <wrl.h>
 #include <wil/com.h>
 #include <WebView2.h>
@@ -31,6 +32,10 @@ struct Measure
     wil::com_ptr<ICoreWebView2Controller> webViewController;
     wil::com_ptr<ICoreWebView2> webView;
     EventRegistrationToken webMessageToken;
+    
+    std::wstring buffer;  // Buffer for section variable return values
+    std::wstring callbackResult;  // Stores return value from OnInitialize/OnUpdate callbacks
+    std::map<std::wstring, std::wstring> jsResults; // Cache for CallJS results
     
     Measure();
     ~Measure();

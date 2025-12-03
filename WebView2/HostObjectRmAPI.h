@@ -28,6 +28,10 @@ public:
     STDMETHODIMP ReadDoubleFromSection(BSTR section, BSTR option, VARIANT defaultValue, double* result) override;
     STDMETHODIMP ReadFormulaFromSection(BSTR section, BSTR option, VARIANT defaultValue, double* result) override;
     
+    // Lifecycle methods
+    STDMETHODIMP Initialize() override;
+    STDMETHODIMP Update(double* result) override;
+    
     // Utility functions
     STDMETHODIMP ReplaceVariables(BSTR text, BSTR* result) override;
     STDMETHODIMP GetVariable(BSTR variableName, BSTR* result) override;

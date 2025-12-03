@@ -197,24 +197,64 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
 PLUGIN_EXPORT double Update(void* data)
 {
     Measure* measure = (Measure*)data;
+    
+    // Call JavaScript OnUpdate callback if WebView is initialized
+    if (measure->initialized && measure->webView)
+    {
+        measure->webView->ExecuteScript(
+            L"(function() { if (typeof window.OnUpdate === 'function') { var result = window.OnUpdate(); return result !== undefined ? String(result) : ''; } return ''; })();",
+            Callback<ICoreWebView2ExecuteScriptCompletedHandler>(
+                [measure](HRESULT errorCode, LPCWSTR resultObjectAsJson) -> HRESULT
+                {
+                    if (SUCCEEDED(errorCode) && resultObjectAsJson)
+                    {
+                        // Remove quotes from JSON string result
+                        std::wstring result = resultObjectAsJson;
+                        if (result.length() >= 2 && result.front() == L'"' && result.back() == L'"')
+                        {
+                            result = result.substr(1, result.length() - 2);
+                        }
+                        
+                        // Store the callback result
+                        if (!result.empty() && result != L"null")
+                        {
+                            measure->callbackResult = result;
+                        }
+                        
+                        // Trigger Rainmeter update after callback completes to sync values
+                        if (measure->rm)
+                        {
+                            RmExecute(measure->skin, L"!UpdateMeasure #CURRENTSECTION#");
+                            RmExecute(measure->skin, L"!UpdateMeter *");
+                            RmExecute(measure->skin, L"!Redraw");
+                        }
+                    }
+                    return S_OK;
+                }
+            ).Get()
+        );
+    }
+    
     return measure->initialized ? 1.0 : 0.0;
 }
 
 PLUGIN_EXPORT LPCWSTR GetString(void* data)
 {
     Measure* measure = (Measure*)data;
-    static std::wstring result;
     
-    if (measure->initialized)
+    // Return the callback result if available, otherwise return status
+    if (!measure->callbackResult.empty())
     {
-        result = L"WebView2 Initialized";
+        return measure->callbackResult.c_str();
+    }
+    else if (measure->initialized)
+    {
+        return L"WebView2 Initialized";
     }
     else
     {
-        result = L"WebView2 Initializing...";
+        return L"WebView2 Initializing...";
     }
-    
-    return result.c_str();
 }
 
 PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args)
@@ -276,6 +316,75 @@ PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args)
         measure->webView->OpenDevToolsWindow();
     }
 
+}
+
+// Generic JavaScript function caller
+PLUGIN_EXPORT LPCWSTR CallJS(void* data, const int argc, const WCHAR* argv[])
+{
+    Measure* measure = (Measure*)data;
+    
+    if (!measure || !measure->initialized || !measure->webView)
+        return L"";
+    
+    if (argc == 0 || !argv[0])
+        return L"";
+    
+    // Build unique key for this call: functionName|arg1|arg2...
+    std::wstring key = argv[0];
+    for (int i = 1; i < argc; i++)
+    {
+        key += L"|";
+        key += argv[i];
+    }
+    
+    // Build JavaScript call: functionName(arg1, arg2, ...)
+    std::wstring jsCode = L"(function() { try { if (typeof " + std::wstring(argv[0]) + L" === 'function') { var result = " + std::wstring(argv[0]) + L"(";
+    
+    // Add arguments if provided
+    for (int i = 1; i < argc; i++)
+    {
+        if (i > 1) jsCode += L", ";
+        jsCode += L"'" + std::wstring(argv[i]) + L"'";
+    }
+    
+    jsCode += L"); return result !== undefined ? String(result) : ''; } return 'Function not found'; } catch(e) { return 'Error: ' + e.message; } })();";
+    
+    // Execute asynchronously and update cache
+    measure->webView->ExecuteScript(
+        jsCode.c_str(),
+        Callback<ICoreWebView2ExecuteScriptCompletedHandler>(
+            [measure, key](HRESULT errorCode, LPCWSTR resultObjectAsJson) -> HRESULT
+            {
+                if (SUCCEEDED(errorCode) && resultObjectAsJson)
+                {
+                    std::wstring result = resultObjectAsJson;
+                    if (result.length() >= 2 && result.front() == L'"' && result.back() == L'"')
+                    {
+                        result = result.substr(1, result.length() - 2);
+                    }
+                    
+                    if (!result.empty() && result != L"null")
+                    {
+                        // Update cache for this specific call
+                        measure->jsResults[key] = result;
+                    }
+                }
+                return S_OK;
+            }
+        ).Get()
+    );
+    
+    // Return cached result if available, otherwise "Calling..."
+    if (measure->jsResults.find(key) != measure->jsResults.end())
+    {
+        measure->buffer = measure->jsResults[key];
+    }
+    else
+    {
+        measure->buffer = L"Calling...";
+    }
+    
+    return measure->buffer.c_str();
 }
 
 PLUGIN_EXPORT void Finalize(void* data)

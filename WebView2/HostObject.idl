@@ -23,6 +23,10 @@ library WebView2Library
         HRESULT ReadDoubleFromSection([in] BSTR section, [in] BSTR option, [in, optional] VARIANT defaultValue, [out, retval] double* result);
         HRESULT ReadFormulaFromSection([in] BSTR section, [in] BSTR option, [in, optional] VARIANT defaultValue, [out, retval] double* result);
         
+        // Lifecycle methods
+        HRESULT Initialize();
+        HRESULT Update([out, retval] double* result);
+        
         // Utility functions
         HRESULT ReplaceVariables([in] BSTR text, [out, retval] BSTR* result);
         HRESULT GetVariable([in] BSTR variableName, [out, retval] BSTR* result);

@@ -88,6 +88,46 @@ Execute commands from your skin using `[!CommandMeasure MeasureName "Command"]`:
 | `ExecuteScript <script>` | Execute JavaScript code in the WebView | `[!CommandMeasure MeasureWebView "ExecuteScript alert('Hello')"]` |
 | `OpenDevTools` | Open the browser developer tools (F12) | `[!CommandMeasure MeasureWebView "OpenDevTools"]` |
 
+## 🔄 JavaScript Lifecycle Callbacks
+
+The plugin automatically calls these functions in your JavaScript if they are defined. They can also return values to Rainmeter!
+
+| Function | Description | Return Value |
+|----------|-------------|--------------|
+| `OnInitialize()` | Called once when the plugin is ready | The returned string becomes the measure's value |
+| `OnUpdate()` | Called on every Rainmeter update cycle | The returned string becomes the measure's value |
+
+**Example:**
+```javascript
+window.OnInitialize = function() {
+    console.log("Plugin ready!");
+    return "Ready!";
+};
+
+window.OnUpdate = function() {
+    // Return value updates the measure's string value
+    return "Counter: " + counter++;
+};
+```
+
+## ⚡ Section Variables
+
+Call JavaScript functions directly from your Rainmeter skin!
+
+| Function | Description | Example |
+|----------|-------------|---------|
+| `CallJS(funcName, args...)` | Call any JS function and get the result | `[MeasureWebView:CallJS('myFunc', 'arg1')]` |
+
+**Note:** `CallJS` is asynchronous. It returns the last known value immediately while updating the result in the background.
+
+**Example:**
+```ini
+[MeterTemp]
+Meter=String
+Text=[MeasureWebView:CallJS('getTemperature')]
+DynamicVariables=1
+```
+
 ## 🔌 JavaScript API
 
 ### Accessing Rainmeter from JavaScript
@@ -143,6 +183,13 @@ const absolutePath = await RainmeterAPI.PathToAbsolute('../folder/file.txt');
 | `ReadIntFromSection(section, option, defaultValue)` | `section`: string<br>`option`: string<br>`defaultValue`: number | `Promise<number>` | Read integer option from specified section |
 | `ReadDoubleFromSection(section, option, defaultValue)` | `section`: string<br>`option`: string<br>`defaultValue`: number | `Promise<number>` | Read double option from specified section |
 | `ReadFormulaFromSection(section, option, defaultValue)` | `section`: string<br>`option`: string<br>`defaultValue`: number | `Promise<number>` | Read and evaluate formula from specified section |
+
+#### Lifecycle Methods
+
+| Method | Parameters | Return Type | Description |
+|--------|------------|-------------|-------------|
+| `OnInitialize()` | None | `Promise<void>` | Called once when the plugin is ready |
+| `OnUpdate()` | None | `Promise<number>` | Called on every Rainmeter update cycle |
 
 #### Utility Functions
 

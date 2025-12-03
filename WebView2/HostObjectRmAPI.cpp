@@ -263,6 +263,24 @@ STDMETHODIMP HostObjectRmAPI::ReadFormulaFromSection(BSTR section, BSTR option, 
     return S_OK;
 }
 
+// Lifecycle methods
+STDMETHODIMP HostObjectRmAPI::Initialize()
+{
+    // This method can be called from JavaScript to check if the API is ready
+    // Simply return S_OK to indicate success
+    return S_OK;
+}
+
+STDMETHODIMP HostObjectRmAPI::Update(double* result)
+{
+    if (!result || !measure)
+        return E_INVALIDARG;
+    
+    // Return 1.0 if initialized, 0.0 otherwise (mirrors the C++ Update function)
+    *result = measure->initialized ? 1.0 : 0.0;
+    return S_OK;
+}
+
 // Utility functions
 STDMETHODIMP HostObjectRmAPI::ReplaceVariables(BSTR text, BSTR* result)
 {
