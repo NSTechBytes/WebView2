@@ -344,9 +344,9 @@ DynamicVariables=1
 
 ```javascript
 // In your HTML
-function getTemperature() {
+window.getTemperature = function() {
     return 72;
-}
+};
 ```
 
 ---
@@ -635,7 +635,7 @@ git push origin feature/AmazingFeature
 
 Built with powerful tools and inspired by the community
 
-**[Microsoft Edge WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)** • **[Rainmeter API](https://docs.rainmeter.net/developers/plugin/)** • **Rainmeter Community**
+**[Microsoft Edge WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)** • **[Rainmeter API](https://docs.rainmeter.net/developers/plugin/plugin-anatomy/)** • **Rainmeter Community**
 
 </div>
 
