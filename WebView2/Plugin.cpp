@@ -52,7 +52,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 Measure::Measure() : rm(nullptr), skin(nullptr), skinWindow(nullptr), 
             measureName(nullptr),
             width(800), height(600), x(0), y(0), 
-            visible(true), initialized(false), webMessageToken{}
+            visible(true), initialized(false), clickthrough(false), webMessageToken{}
 {
     // Initialize COM for this thread if not already done
     if (!g_comInitialized)
@@ -80,6 +80,43 @@ PLUGIN_EXPORT void Initialize(void** data, void* rm)
     measure->skin = RmGetSkin(rm);
     measure->skinWindow = RmGetSkinWindow(rm);
     measure->measureName = RmGetMeasureName(rm);
+}
+
+// Helper to update clickthrough state
+void UpdateClickthrough(Measure* measure)
+{
+    if (!measure->skinWindow) return;
+
+    // Find the WebView2 window (child of skin window)
+    // We iterate through children to find the one that matches our bounds
+    HWND child = GetWindow(measure->skinWindow, GW_CHILD);
+    while (child)
+    {
+        // Check if this is likely our window
+        // For simplicity, we assume the first child or check bounds if needed
+        // Since we can't easily map controller to HWND, we'll try to apply to all children 
+        // that look like WebView windows (or just the first one if we assume 1 per skin for now)
+        
+        // Better approach: Check if the window rect matches our measure bounds
+        RECT rect;
+        GetWindowRect(child, &rect);
+        
+        // Convert to client coordinates of parent
+        POINT pt = { rect.left, rect.top };
+        ScreenToClient(measure->skinWindow, &pt);
+        
+        // Allow some tolerance or just apply to all children?
+        // Applying to all children might be safer for "Clickthrough" if there are multiple WebViews
+        // and we want them all to respect their settings.
+        // But if we have multiple measures, we want to target ONLY ours.
+        
+        // For now, let's just apply to the child window found.
+        // EnableWindow(FALSE) makes it ignore mouse input (Clickthrough=1)
+        // EnableWindow(TRUE) makes it accept mouse input (Clickthrough=0)
+        EnableWindow(child, !measure->clickthrough);
+        
+        child = GetWindow(child, GW_HWNDNEXT);
+    }
 }
 
 PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
@@ -136,6 +173,7 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
     int newX = RmReadInt(rm, L"X", 0);
     int newY = RmReadInt(rm, L"Y", 0);
     bool newVisible = RmReadInt(rm, L"Hidden", 0) == 0;
+    bool newClickthrough = RmReadInt(rm, L"Clickthrough", 0) != 0;
     
     // Check if URL has changed (requires recreation)
     bool urlChanged = (newUrl != measure->url);
@@ -147,6 +185,7 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
                              newY != measure->y);
     
     bool visibilityChanged = (newVisible != measure->visible);
+    bool clickthroughChanged = (newClickthrough != measure->clickthrough);
     
     // Update stored values
     measure->url = newUrl;
@@ -155,6 +194,7 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
     measure->x = newX;
     measure->y = newY;
     measure->visible = newVisible;
+    measure->clickthrough = newClickthrough;
     
     // Only create WebView2 if not initialized OR if URL changed
     if (!measure->initialized || urlChanged)
@@ -190,6 +230,11 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
         if (visibilityChanged && measure->webViewController)
         {
             measure->webViewController->put_IsVisible(measure->visible ? TRUE : FALSE);
+        }
+        
+        if (clickthroughChanged)
+        {
+            UpdateClickthrough(measure);
         }
     }
 }
@@ -249,7 +294,6 @@ PLUGIN_EXPORT LPCWSTR GetString(void* data)
     
     return L"0";
 }
-
 PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args)
 {
     Measure* measure = (Measure*)data;
@@ -285,10 +329,6 @@ PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args)
     {
         measure->webView->GoForward();
     }
-    else if (_wcsicmp(action.c_str(), L"GoForward") == 0)
-    {
-        measure->webView->GoForward();
-    }
     else if (_wcsicmp(action.c_str(), L"ExecuteScript") == 0)
     {
         if (!param.empty())
@@ -308,7 +348,21 @@ PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args)
     {
         measure->webView->OpenDevToolsWindow();
     }
-
+    else if (_wcsicmp(action.c_str(), L"EnableClickthrough") == 0)
+    {
+        measure->clickthrough = true;
+        UpdateClickthrough(measure);
+    }
+    else if (_wcsicmp(action.c_str(), L"DisableClickthrough") == 0)
+    {
+        measure->clickthrough = false;
+        UpdateClickthrough(measure);
+    }
+    else if (_wcsicmp(action.c_str(), L"ToggleClickthrough") == 0)
+    {
+        measure->clickthrough = !measure->clickthrough;
+        UpdateClickthrough(measure);
+    }
 }
 
 // Generic JavaScript function caller

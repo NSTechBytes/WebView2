@@ -28,6 +28,7 @@ struct Measure
     int y;
     bool visible;
     bool initialized;
+    bool clickthrough;
     
     wil::com_ptr<ICoreWebView2Controller> webViewController;
     wil::com_ptr<ICoreWebView2> webView;
@@ -47,4 +48,5 @@ struct Measure
 
 // WebView2 functions
 void CreateWebView2(Measure* measure);
+void UpdateClickthrough(Measure* measure);
 

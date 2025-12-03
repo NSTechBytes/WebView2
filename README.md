@@ -1,46 +1,154 @@
 # WebView2 Plugin for Rainmeter
 
-A powerful Rainmeter plugin that embeds Microsoft Edge WebView2 into your skins, enabling modern web content with full JavaScript interop capabilities.
+<div align="center">
 
-![Version](https://img.shields.io/badge/version-0.0.3-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Rainmeter](https://img.shields.io/badge/rainmeter-4.5%2B-orange)
+![WebView2 Plugin Banner](https://img.shields.io/badge/WebView2-Rainmeter_Plugin-0078D4?style=for-the-badge&logo=microsoft-edge&logoColor=white)
 
-## 🌟 Features
+**Embed modern web content directly into your Rainmeter skins with full JavaScript interactivity**
 
-- **Modern Web Engine**: Leverage Microsoft Edge WebView2 for rendering modern HTML5, CSS3, and JavaScript
-- **JavaScript Bridge**: Seamless two-way communication between Rainmeter and web content
-- **Rainmeter API Access**: Full access to Rainmeter's API from JavaScript
-- **Dynamic Content**: Load local HTML files or remote URLs
-- **Event Handling**: Support for custom events and callbacks
-- **Multiple Skins**: Run multiple WebView2 instances simultaneously
+[![Version](https://img.shields.io/badge/version-0.0.3-blue?style=flat-square)](../../releases)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+[![Rainmeter](https://img.shields.io/badge/rainmeter-4.5+-orange?style=flat-square)](https://www.rainmeter.net/)
+[![Windows](https://img.shields.io/badge/windows-10%2B-0078D6?style=flat-square&logo=windows&logoColor=white)](https://www.microsoft.com/windows)
+
+[📥 Download](#-installation) • [📖 Documentation](#-quick-start) • [💡 Examples](#-examples) • [🤝 Contributing](#-contributing)
+
+</div>
+
+---
+
+## ✨ What Can You Build?
+
+<table>
+<tr>
+<td width="33%" align="center">
+<img src="https://img.icons8.com/fluency/96/000000/clock.png" width="64" alt="Clock"/><br/>
+<b>Animated Widgets</b><br/>
+<sub>Create stunning animated clocks, weather displays, and visualizers</sub>
+</td>
+<td width="33%" align="center">
+<img src="https://img.icons8.com/fluency/96/000000/web.png" width="64" alt="Web"/><br/>
+<b>Web Dashboards</b><br/>
+<sub>Embed live web content and interactive dashboards</sub>
+</td>
+<td width="33%" align="center">
+<img src="https://img.icons8.com/fluency/96/000000/api.png" width="64" alt="API"/><br/>
+<b>Smart Integrations</b><br/>
+<sub>Connect to APIs and control Rainmeter with JavaScript</sub>
+</td>
+</tr>
+</table>
+
+---
+
+## 🎯 Key Features
+
+<details open>
+<summary><b>🚀 Modern Web Engine</b></summary>
+
+Powered by Microsoft Edge WebView2, supporting:
+- ✅ HTML5, CSS3, JavaScript ES6+
+- ✅ Modern frameworks (React, Vue, Svelte)
+- ✅ WebGL, Canvas, SVG animations
+- ✅ Transparent backgrounds by default
+
+</details>
+
+<details open>
+<summary><b>🔌 Seamless JavaScript Bridge</b></summary>
+
+Two-way communication between web and Rainmeter:
+- ✅ Call Rainmeter API from JavaScript
+- ✅ Execute JavaScript from Rainmeter
+- ✅ Real-time data synchronization
+- ✅ Custom events and callbacks
+
+</details>
+
+<details open>
+<summary><b>⚡ Dynamic & Flexible</b></summary>
+
+- ✅ Load local HTML or remote URLs
+- ✅ Multiple WebView instances per skin
+- ✅ Hot-reload without flickering
+- ✅ Developer tools (F12) built-in
+
+</details>
+
+---
 
 ## 📋 Requirements
 
-- **Windows**: Windows 10 version 1803 or later (Windows 11 recommended)
-- **Rainmeter**: Version 4.5 or higher
-- **WebView2 Runtime**: [Download here](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) (usually pre-installed on Windows 11)
+> **Before you begin**, make sure you have:
 
-## 🚀 Installation
+| Requirement | Version | Status |
+|------------|---------|---------|
+| **Windows** | 10 (1803+) or 11 | ![Windows](https://img.shields.io/badge/required-critical-red?style=flat-square) |
+| **Rainmeter** | 4.5 or higher | ![Rainmeter](https://img.shields.io/badge/required-critical-red?style=flat-square) |
+| **WebView2 Runtime** | Latest | ![WebView2](https://img.shields.io/badge/required-critical-red?style=flat-square) |
 
-### Method 1: RMSKIN Package (Recommended)
+<details>
+<summary>📦 <b>Don't have WebView2 Runtime?</b></summary>
 
-1. Download the latest `.rmskin` file from the [Releases](../../releases) page
-2. Double-click the `.rmskin` file to install
-3. Rainmeter will automatically install the plugin and example skins
+<br/>
 
-### Method 2: Manual Installation
+**Good news!** Windows 11 includes it by default. For Windows 10:
 
-1. Download the plugin DLLs from the [Releases](../../releases) page
-2. Extract the appropriate DLL for your system:
-   - `x64/WebView2.dll` for 64-bit Rainmeter
-   - `x32/WebView2.dll` for 32-bit Rainmeter
-3. Place the DLL in your Rainmeter plugins folder:
-   - `%AppData%\Rainmeter\Plugins\`
+1. 🔗 [Download WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)
+2. 🎯 Choose "Evergreen Standalone Installer"
+3. ⚡ Run the installer (takes ~1 minute)
 
-## 📖 Usage
+</details>
 
-### Basic Skin Configuration
+---
+
+## 📥 Installation
+
+### 🎁 Method 1: One-Click Install (Recommended)
+
+<div align="center">
+
+**The easiest way to get started!**
+
+1. 📦 [Download the `.rmskin` file](../../releases/latest)
+2. 🖱️ Double-click to install
+3. ✨ Done! Plugin and examples are ready to use
+
+<sub>Rainmeter will automatically install everything you need</sub>
+
+</div>
+
+### 🛠️ Method 2: Manual Installation
+
+<details>
+<summary>Click to expand manual installation steps</summary>
+
+<br/>
+
+1. **Download** the plugin DLLs from [Releases](../../releases)
+
+2. **Choose** the right version:
+   ```
+   📁 x64/WebView2.dll  ← For 64-bit Rainmeter (most common)
+   📁 x32/WebView2.dll  ← For 32-bit Rainmeter
+   ```
+
+3. **Copy** to your Rainmeter plugins folder:
+   ```
+   %AppData%\Rainmeter\Plugins\
+   ```
+
+4. **Restart** Rainmeter
+
+</details>
+
+---
+
+## 🚀 Quick Start
+
+### Your First WebView Skin
+
+Create a new skin with this minimal configuration:
 
 ```ini
 [Rainmeter]
@@ -50,276 +158,495 @@ Update=1000
 Measure=Plugin
 Plugin=WebView2
 URL=file:///#@#index.html
-Width=800
-Height=600
+W=800
+H=600
 ```
 
-### Plugin Options
+Create `index.html` in your `@Resources` folder:
 
-| Option | Description | Default | Required |
-|--------|-------------|---------|----------|
-| `URL` | Path to HTML file or web URL (supports `file:///`, `http://`, `https://`) | - | Yes |
-| `W` | Width of the WebView in pixels | 800 | No |
-| `H` | Height of the WebView in pixels | 600 | No |
-| `X` | X position offset in pixels | 0 | No |
-| `Y` | Y position offset in pixels | 0 | No |
-| `Hidden` | Hide the WebView on load (0 = visible, 1 = hidden) | 0 | No |
-| `DynamicVariables` | Enable dynamic variable updates (0 or 1) | 0 | No |
-
-**Notes**: 
-- Transparent background is always enabled by default. Developer tools (F12) are always available.
-- When `DynamicVariables=1`, the plugin intelligently handles updates:
-  - **URL changes**: Navigates to the new URL without recreating the WebView
-  - **Dimension/Position changes** (`W`, `H`, `X`, `Y`): Applied instantly without flickering
-  - **Visibility changes** (`Hidden`): Applied instantly
-  - The WebView is only created once on first load, preventing flickering issues
-
-
-### Bang Commands
-
-Execute commands from your skin using `[!CommandMeasure MeasureName "Command"]`:
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `Navigate <url>` | Navigate to a URL (web or file path) | `[!CommandMeasure MeasureWebView "Navigate https://example.com"]` |
-| `Reload` | Reload the current page | `[!CommandMeasure MeasureWebView "Reload"]` |
-| `GoBack` | Navigate to the previous page in history | `[!CommandMeasure MeasureWebView "GoBack"]` |
-| `GoForward` | Navigate to the next page in history | `[!CommandMeasure MeasureWebView "GoForward"]` |
-| `ExecuteScript <script>` | Execute JavaScript code in the WebView | `[!CommandMeasure MeasureWebView "ExecuteScript alert('Hello')"]` |
-| `OpenDevTools` | Open the browser developer tools (F12) | `[!CommandMeasure MeasureWebView "OpenDevTools"]` |
-
-## 🔄 JavaScript Lifecycle Callbacks
-
-The plugin automatically calls these functions in your JavaScript if they are defined. They can also return values to Rainmeter!
-
-| Function | Description | Return Value |
-|----------|-------------|--------------|
-| `OnInitialize()` | Called once when the plugin is ready | The returned string becomes the measure's value |
-| `OnUpdate()` | Called on every Rainmeter update cycle | The returned string becomes the measure's value |
-
-**Example:**
-```javascript
-window.OnInitialize = function() {
-    console.log("Plugin ready!");
-    return "Ready!";
-};
-
-window.OnUpdate = function() {
-    // Return value updates the measure's string value
-    return "Counter: " + counter++;
-};
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 { font-size: 3em; animation: fadeIn 1s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <h1>🎉 Hello Rainmeter!</h1>
+</body>
+</html>
 ```
 
-## ⚡ Section Variables
+**That's it!** Load the skin and see your first WebView in action.
 
-Call JavaScript functions directly from your Rainmeter skin!
+---
 
-| Function | Description | Example |
-|----------|-------------|---------|
-| `CallJS(funcName, args...)` | Call any JS function and get the result | `[MeasureWebView:CallJS('myFunc', 'arg1')]` |
+## ⚙️ Configuration Options
 
-**Note:** `CallJS` is asynchronous. It returns the last known value immediately while updating the result in the background.
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+<th>Default</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>URL</code></td>
+<td>🌐 HTML file or web URL<br/><sub>Supports: <code>file:///</code>, <code>http://</code>, <code>https://</code></sub></td>
+<td><em>Required</em></td>
+<td><code>file:///#@#index.html</code></td>
+</tr>
+<tr>
+<td><code>W</code></td>
+<td>📏 Width in pixels</td>
+<td>800</td>
+<td><code>1920</code></td>
+</tr>
+<tr>
+<td><code>H</code></td>
+<td>📏 Height in pixels</td>
+<td>600</td>
+<td><code>1080</code></td>
+</tr>
+<tr>
+<td><code>X</code></td>
+<td>↔️ Horizontal position offset</td>
+<td>0</td>
+<td><code>100</code></td>
+</tr>
+<tr>
+<td><code>Y</code></td>
+<td>↕️ Vertical position offset</td>
+<td>0</td>
+<td><code>50</code></td>
+</tr>
+<tr>
+<td><code>Hidden</code></td>
+<td>👁️ Start hidden<br/><sub>0 = visible, 1 = hidden</sub></td>
+<td>0</td>
+<td><code>1</code></td>
+</tr>
+<tr>
+<td><code>Clickthrough</code></td>
+<td>🖱️ Mouse interaction<br/><sub>0 = interactive, 1 = clickthrough</sub></td>
+<td>0</td>
+<td><code>1</code></td>
+</tr>
+<tr>
+<td><code>DynamicVariables</code></td>
+<td>🔄 Enable live updates</td>
+<td>0</td>
+<td><code>1</code></td>
+</tr>
+</tbody>
+</table>
 
-**Example:**
+> **💡 Pro Tip:** When `DynamicVariables=1`, the WebView updates smartly:
+> - **URL changes** → Navigates without recreating
+> - **Size/Position changes** → Applied instantly, no flicker
+> - **Visibility changes** → Instant toggle
+
+---
+
+## 🎮 Bang Commands
+
+Control your WebView with Rainmeter bangs:
+
+<table>
+<tr>
+<td width="50%">
+
+**Navigation Commands**
+
 ```ini
-[MeterTemp]
+; Go to a URL
+[!CommandMeasure MeasureWebView "Navigate https://example.com"]
+
+; Reload current page
+[!CommandMeasure MeasureWebView "Reload"]
+
+; Browser history
+[!CommandMeasure MeasureWebView "GoBack"]
+[!CommandMeasure MeasureWebView "GoForward"]
+```
+
+</td>
+<td width="50%">
+
+**Control Commands**
+
+```ini
+; Execute JavaScript
+[!CommandMeasure MeasureWebView "ExecuteScript alert('Hi!')"]
+
+; Developer tools
+[!CommandMeasure MeasureWebView "OpenDevTools"]
+
+; Mouse interaction
+[!CommandMeasure MeasureWebView "ToggleClickthrough"]
+[!CommandMeasure MeasureWebView "EnableClickthrough"]
+[!CommandMeasure MeasureWebView "DisableClickthrough"]
+```
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🔥 JavaScript Integration
+
+### Lifecycle Hooks
+
+Your JavaScript can respond to Rainmeter events:
+
+```javascript
+// Called once when plugin is ready
+window.OnInitialize = function() {
+    console.log("🚀 WebView initialized!");
+    return "Ready!"; // This becomes the measure's value
+};
+
+// Called on every Rainmeter update
+window.OnUpdate = function() {
+    const now = new Date().toLocaleTimeString();
+    return now; // Updates measure value
+};
+```
+
+> ⚠️ **Note:** JavaScript execution is asynchronous, so there's a 1-update delay between JS return and Rainmeter display. This is normal!
+
+### Call JavaScript from Rainmeter
+
+Use section variables to call any JavaScript function:
+
+```ini
+[MeterTemperature]
 Meter=String
-Text=[MeasureWebView:CallJS('getTemperature')]
+Text=Current temp: [MeasureWebView:CallJS('getTemperature')]°C
 DynamicVariables=1
 ```
 
-## 🔌 JavaScript API
-
-### Accessing Rainmeter from JavaScript
-
-The plugin exposes a `RainmeterAPI` object to your web content:
-
 ```javascript
-// Read skin options
-const value = await RainmeterAPI.ReadString('OptionName', 'DefaultValue');
-const number = await RainmeterAPI.ReadInt('NumberOption', 0);
-const formula = await RainmeterAPI.ReadFormula('FormulaOption', 0);
-
-// Read from other sections
-const sectionValue = await RainmeterAPI.ReadStringFromSection('SectionName', 'OptionName', 'Default');
-
-// Execute Rainmeter bangs
-await RainmeterAPI.Bang('!SetVariable MyVar "Hello"');
-
-// Log messages
-await RainmeterAPI.Log('Debug message', 'DEBUG');
-
-// Get skin information
-const measureName = await RainmeterAPI.MeasureName;
-const skinName = await RainmeterAPI.SkinName;
-
-// Replace variables
-const resolved = await RainmeterAPI.ReplaceVariables('#MyVariable#');
-
-// Get variable values
-const varValue = await RainmeterAPI.GetVariable('MyVariable');
-
-// Convert paths
-const absolutePath = await RainmeterAPI.PathToAbsolute('../folder/file.txt');
+// In your HTML
+function getTemperature() {
+    return 72;
+}
 ```
 
-### API Methods Reference
+---
 
-#### Reading Options
+## 🌉 RainmeterAPI Bridge
 
-| Method | Parameters | Return Type | Description |
-|--------|------------|-------------|-------------|
-| `ReadString(option, defaultValue)` | `option`: string<br>`defaultValue`: string | `Promise<string>` | Read string option from measure |
-| `ReadInt(option, defaultValue)` | `option`: string<br>`defaultValue`: number | `Promise<number>` | Read integer option from measure |
-| `ReadDouble(option, defaultValue)` | `option`: string<br>`defaultValue`: number | `Promise<number>` | Read double option from measure |
-| `ReadFormula(option, defaultValue)` | `option`: string<br>`defaultValue`: number | `Promise<number>` | Read and evaluate formula option |
-| `ReadPath(option, defaultValue)` | `option`: string<br>`defaultValue`: string | `Promise<string>` | Read path option and convert to absolute |
+Access Rainmeter's full power from JavaScript:
 
-#### Reading from Sections
+### Read Skin Options
 
-| Method | Parameters | Return Type | Description |
-|--------|------------|-------------|-------------|
-| `ReadStringFromSection(section, option, defaultValue)` | `section`: string<br>`option`: string<br>`defaultValue`: string | `Promise<string>` | Read string option from specified section |
-| `ReadIntFromSection(section, option, defaultValue)` | `section`: string<br>`option`: string<br>`defaultValue`: number | `Promise<number>` | Read integer option from specified section |
-| `ReadDoubleFromSection(section, option, defaultValue)` | `section`: string<br>`option`: string<br>`defaultValue`: number | `Promise<number>` | Read double option from specified section |
-| `ReadFormulaFromSection(section, option, defaultValue)` | `section`: string<br>`option`: string<br>`defaultValue`: number | `Promise<number>` | Read and evaluate formula from specified section |
+```javascript
+// Read from your measure
+const refreshRate = await RainmeterAPI.ReadInt('UpdateRate', 1000);
+const siteName = await RainmeterAPI.ReadString('SiteName', 'Default');
 
-#### Lifecycle Methods
+// Read from other sections
+const cpuUsage = await RainmeterAPI.ReadStringFromSection('MeasureCPU', 'Value', '0');
+```
 
-| Method | Parameters | Return Type | Description |
-|--------|------------|-------------|-------------|
-| `OnInitialize()` | None | `Promise<void>` | Called once when the plugin is ready |
-| `OnUpdate()` | None | `Promise<number>` | Called on every Rainmeter update cycle |
+### Execute Bangs
 
-#### Utility Functions
+```javascript
+// Set variables
+await RainmeterAPI.Bang('!SetVariable MyVar "Hello World"');
 
-| Method | Parameters | Return Type | Description |
-|--------|------------|-------------|-------------|
-| `ReplaceVariables(text)` | `text`: string | `Promise<string>` | Replace Rainmeter variables in text (e.g., `#Variable#`, `[MeasureName]`) |
-| `GetVariable(variableName)` | `variableName`: string | `Promise<string>` | Get the value of a Rainmeter variable |
-| `PathToAbsolute(relativePath)` | `relativePath`: string | `Promise<string>` | Convert relative path to absolute path |
-| `Bang(command)` | `command`: string | `Promise<void>` | Execute a Rainmeter bang command |
-| `Log(message, level)` | `message`: string<br>`level`: 'ERROR' \| 'WARNING' \| 'NOTICE' \| 'DEBUG' | `Promise<void>` | Log a message to Rainmeter log |
+// Control skins
+await RainmeterAPI.Bang('!ActivateConfig "MySkin" "Variant.ini"');
 
-#### Properties
+// Update meters
+await RainmeterAPI.Bang('!UpdateMeter MeterName');
+await RainmeterAPI.Bang('!Redraw');
+```
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `MeasureName` | `Promise<string>` | Get the name of the current measure |
-| `SkinName` | `Promise<string>` | Get the name of the current skin |
-| `SkinWindowHandle` | `Promise<string>` | Get the window handle of the skin |
-| `SettingsFile` | `Promise<string>` | Get the path to Rainmeter.data file |
+### Get Skin Information
 
-## 📚 Examples
+```javascript
+const skinName = await RainmeterAPI.SkinName;
+const measureName = await RainmeterAPI.MeasureName;
 
-The plugin includes several example skins demonstrating various features:
+// Replace variables
+const path = await RainmeterAPI.ReplaceVariables('#@#images/logo.png');
 
-- **Clock** - Animated liquid clock widget
-- **Calendar** - Interactive calendar
-- **ReadMeasureOption** - Reading options from measures
-- **ReadSectionOption** - Reading options from other sections
-- **BangCommand** - Executing Rainmeter bangs
-- **UtilityFunction** - Using utility functions
-- **InformationProperty** - Accessing skin properties
+// Get variable values
+const theme = await RainmeterAPI.GetVariable('CurrentTheme');
+```
+
+### Logging
+
+```javascript
+await RainmeterAPI.Log('Debug info', 'DEBUG');
+await RainmeterAPI.Log('Warning message', 'WARNING');
+await RainmeterAPI.Log('Error occurred', 'ERROR');
+```
+
+### Complete API Reference
+
+<details>
+<summary>📚 <b>Click to see all available methods</b></summary>
+
+<br/>
+
+**Reading Options**
+- `ReadString(option, defaultValue)` → `Promise<string>`
+- `ReadInt(option, defaultValue)` → `Promise<number>`
+- `ReadDouble(option, defaultValue)` → `Promise<number>`
+- `ReadFormula(option, defaultValue)` → `Promise<number>`
+- `ReadPath(option, defaultValue)` → `Promise<string>`
+
+**Reading from Sections**
+- `ReadStringFromSection(section, option, defaultValue)` → `Promise<string>`
+- `ReadIntFromSection(section, option, defaultValue)` → `Promise<number>`
+- `ReadDoubleFromSection(section, option, defaultValue)` → `Promise<number>`
+- `ReadFormulaFromSection(section, option, defaultValue)` → `Promise<number>`
+
+**Utility Functions**
+- `ReplaceVariables(text)` → `Promise<string>`
+- `GetVariable(variableName)` → `Promise<string>`
+- `PathToAbsolute(relativePath)` → `Promise<string>`
+- `Bang(command)` → `Promise<void>`
+- `Log(message, level)` → `Promise<void>`
+
+**Properties**
+- `MeasureName` → `Promise<string>`
+- `SkinName` → `Promise<string>`
+- `SkinWindowHandle` → `Promise<string>`
+- `SettingsFile` → `Promise<string>`
+
+</details>
+
+---
+
+## 💡 Examples
+
+The plugin includes ready-to-use example skins:
+
+<table>
+<tr>
+<td align="center" width="25%">
+<b>🕐 Clock</b><br/>
+<sub>Animated liquid clock with smooth animations</sub>
+</td>
+<td align="center" width="25%">
+<b>📅 Calendar</b><br/>
+<sub>Interactive month view calendar</sub>
+</td>
+<td align="center" width="25%">
+<b>⚙️ Config Reader</b><br/>
+<sub>Read options from measures and sections</sub>
+</td>
+<td align="center" width="25%">
+<b>🔧 Utilities</b><br/>
+<sub>Demonstrate all API functions</sub>
+</td>
+</tr>
+</table>
+
+**To explore examples:**
+1. Install the `.rmskin` package
+2. Check your Rainmeter skins folder
+3. Load example skins from Rainmeter manager
+
+---
 
 ## 🛠️ Building from Source
 
+<details>
+<summary><b>For Developers: Build Instructions</b></summary>
+
+<br/>
+
 ### Prerequisites
 
-- Visual Studio 2022 with C++ desktop development workload
+- Visual Studio 2022 with C++ desktop development
 - Windows SDK
-- PowerShell 5.1 or later
+- PowerShell 5.1+
 
 ### Build Steps
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/WebView2.git
-   cd WebView2
-   ```
+```bash
+# Clone repository
+git clone https://github.com/yourusername/WebView2.git
+cd WebView2
 
-2. Open `WebView2-Plugin.sln` in Visual Studio
+# Open in Visual Studio
+start WebView2-Plugin.sln
 
-3. Build using PowerShell script:
-   ```powershell
-   powershell -ExecutionPolicy Bypass -Command "& {. .\Build-CPP.ps1; Dist -major 0 -minor 0 -patch 3}"
-   ```
-
-This will:
-- Build both x64 and x86 versions
-- Create plugin DLL ZIP file
-- Package the RMSKIN installer
-- Output to the `dist` folder
+# Build with PowerShell
+powershell -ExecutionPolicy Bypass -Command "& {. .\Build-CPP.ps1; Dist -major 0 -minor 0 -patch 3}"
+```
 
 ### Build Output
 
-- `dist/x64/WebView2.dll` - 64-bit plugin
-- `dist/x32/WebView2.dll` - 32-bit plugin
-- `dist/WebView2_v0.0.3_x64_x86_dll.zip` - Plugin DLLs package
-- `dist/WebView2_v0.0.3_Alpha.rmskin` - Complete skin package
+```
+📁 dist/
+  ├── 📁 x64/
+  │   └── WebView2.dll
+  ├── 📁 x32/
+  │   └── WebView2.dll
+  ├── WebView2_v0.0.3_x64_x86_dll.zip
+  └── WebView2_v0.0.3_Alpha.rmskin
+```
 
-## 🐛 Troubleshooting
+</details>
 
-### WebView2 Runtime Not Found
+---
 
-**Error**: "WebView2 Runtime is not installed"
+## 🆘 Troubleshooting
 
-**Solution**: Install the [WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)
+<details>
+<summary><b>❌ "WebView2 Runtime is not installed"</b></summary>
 
-### Controller Creation Failed
+<br/>
 
-**Error**: "Failed to create WebView2 controller (HRESULT: 0x80080005)"
+**Solution:** Install [WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)
 
-**Solution**: 
-- Refresh the skin: Right-click skin → Refresh
-- Restart Rainmeter
-- Ensure WebView2 Runtime is properly installed
+Windows 11 has it pre-installed. For Windows 10, download and run the installer.
 
-### JavaScript API Not Available
+</details>
 
-**Error**: `RainmeterAPI is not defined`
+<details>
+<summary><b>❌ "Failed to create WebView2 controller"</b></summary>
 
-**Solution**:
-- Ensure the page has fully loaded before accessing the API
-- Wait for the `DOMContentLoaded` event:
-  ```javascript
-  document.addEventListener('DOMContentLoaded', () => {
-      // Use RainmeterAPI here
-  });
-  ```
+<br/>
 
-### WebView Not Visible
+**Try these steps:**
 
-**Problem**: WebView doesn't appear on the skin
+1. ✅ Right-click skin → **Refresh skin**
+2. ✅ Restart Rainmeter completely
+3. ✅ Verify WebView2 Runtime is installed
+4. ✅ Check Windows Event Viewer for detailed errors
 
-**Solution**:
-- Check that `Hidden=0` in your measure (or omit it, as 0 is the default)
-- Use the `Show` bang command: `[!CommandMeasure MeasureName "Show"]`
-- Verify the URL is correct and the HTML file exists
-- Check Rainmeter log for errors
+</details>
 
-**Note**: The WebView always has a transparent background by default. Just use `background: transparent;` in your HTML/CSS to see through it.
+<details>
+<summary><b>❌ "RainmeterAPI is not defined" in JavaScript</b></summary>
 
+<br/>
+
+**Solution:** Wait for page to load before accessing API:
+
+```javascript
+document.addEventListener('DOMContentLoaded', () => {
+    // Now you can use RainmeterAPI
+    RainmeterAPI.Log('Page loaded!', 'DEBUG');
+});
+```
+
+</details>
+
+<details>
+<summary><b>❌ WebView not visible</b></summary>
+
+<br/>
+
+**Checklist:**
+
+- ✅ Ensure `Hidden=0` in your measure (default is 0)
+- ✅ Check URL path is correct
+- ✅ Verify HTML file exists
+- ✅ Look for errors in Rainmeter log
+- ✅ Try: `[!CommandMeasure MeasureName "OpenDevTools"]` to debug
+
+**Transparency tip:** The WebView has transparent background by default. Use `background: transparent;` in your CSS.
+
+</details>
+
+---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+<div align="center">
+
+**MIT License** - Free to use, modify, and distribute
+
+See [LICENSE](LICENSE) file for full details
+
+</div>
+
+---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+We welcome contributions! Here's how:
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+<table>
+<tr>
+<td align="center" width="20%">
+<b>1. Fork</b><br/>
+🍴<br/>
+<sub>Fork this repo</sub>
+</td>
+<td align="center" width="20%">
+<b>2. Branch</b><br/>
+🌿<br/>
+<sub>Create feature branch</sub>
+</td>
+<td align="center" width="20%">
+<b>3. Code</b><br/>
+💻<br/>
+<sub>Make your changes</sub>
+</td>
+<td align="center" width="20%">
+<b>4. Commit</b><br/>
+📝<br/>
+<sub>Commit with clear message</sub>
+</td>
+<td align="center" width="20%">
+<b>5. PR</b><br/>
+🚀<br/>
+<sub>Open Pull Request</sub>
+</td>
+</tr>
+</table>
+
+```bash
+git checkout -b feature/AmazingFeature
+git commit -m 'Add some AmazingFeature'
+git push origin feature/AmazingFeature
+```
+
+---
 
 ## 🙏 Acknowledgments
 
-- Built with [Microsoft Edge WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)
-- Uses the [Rainmeter API](https://docs.rainmeter.net/developers/plugin/)
-- Inspired by the Rainmeter community
+<div align="center">
+
+Built with powerful tools and inspired by the community
+
+**[Microsoft Edge WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)** • **[Rainmeter API](https://docs.rainmeter.net/developers/plugin/)** • **Rainmeter Community**
+
+</div>
+
 ---
 
-**Made with ❤️ for the Rainmeter community**
+<div align="center">
+
+### 💖 Made with love for the Rainmeter community
+
+**[⬆ Back to Top](#webview2-plugin-for-rainmeter)**
+
+![Made with Love](https://img.shields.io/badge/Made%20with-❤️-red?style=for-the-badge)
+
+</div>

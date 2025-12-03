@@ -197,5 +197,8 @@ HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller
     if (rm)
         RmLog(rm, LOG_NOTICE, L"WebView2: Initialized successfully with COM Host Objects");
     
+    // Apply initial clickthrough state
+    UpdateClickthrough(this);
+    
     return S_OK;
 }
