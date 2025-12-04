@@ -296,11 +296,6 @@ Control your WebView with Rainmeter bangs:
 
 ; Developer tools
 [!CommandMeasure MeasureWebView "OpenDevTools"]
-
-; Mouse interaction
-[!CommandMeasure MeasureWebView "ToggleClickthrough"]
-[!CommandMeasure MeasureWebView "EnableClickthrough"]
-[!CommandMeasure MeasureWebView "DisableClickthrough"]
 ```
 
 </td>

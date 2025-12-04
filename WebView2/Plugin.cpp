@@ -348,21 +348,6 @@ PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args)
     {
         measure->webView->OpenDevToolsWindow();
     }
-    else if (_wcsicmp(action.c_str(), L"EnableClickthrough") == 0)
-    {
-        measure->clickthrough = true;
-        UpdateClickthrough(measure);
-    }
-    else if (_wcsicmp(action.c_str(), L"DisableClickthrough") == 0)
-    {
-        measure->clickthrough = false;
-        UpdateClickthrough(measure);
-    }
-    else if (_wcsicmp(action.c_str(), L"ToggleClickthrough") == 0)
-    {
-        measure->clickthrough = !measure->clickthrough;
-        UpdateClickthrough(measure);
-    }
 }
 
 // Generic JavaScript function caller
