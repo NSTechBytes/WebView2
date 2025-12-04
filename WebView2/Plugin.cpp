@@ -52,7 +52,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 Measure::Measure() : rm(nullptr), skin(nullptr), skinWindow(nullptr), 
             measureName(nullptr),
             width(800), height(600), x(0), y(0), 
-            visible(true), initialized(false), webMessageToken{}
+            visible(true), initialized(false), clickthrough(false), webMessageToken{}
 {
     // Initialize COM for this thread if not already done
     if (!g_comInitialized)
@@ -80,6 +80,43 @@ PLUGIN_EXPORT void Initialize(void** data, void* rm)
     measure->skin = RmGetSkin(rm);
     measure->skinWindow = RmGetSkinWindow(rm);
     measure->measureName = RmGetMeasureName(rm);
+}
+
+// Helper to update clickthrough state
+void UpdateClickthrough(Measure* measure)
+{
+    if (!measure->skinWindow) return;
+
+    // Find the WebView2 window (child of skin window)
+    // We iterate through children to find the one that matches our bounds
+    HWND child = GetWindow(measure->skinWindow, GW_CHILD);
+    while (child)
+    {
+        // Check if this is likely our window
+        // For simplicity, we assume the first child or check bounds if needed
+        // Since we can't easily map controller to HWND, we'll try to apply to all children 
+        // that look like WebView windows (or just the first one if we assume 1 per skin for now)
+        
+        // Better approach: Check if the window rect matches our measure bounds
+        RECT rect;
+        GetWindowRect(child, &rect);
+        
+        // Convert to client coordinates of parent
+        POINT pt = { rect.left, rect.top };
+        ScreenToClient(measure->skinWindow, &pt);
+        
+        // Allow some tolerance or just apply to all children?
+        // Applying to all children might be safer for "Clickthrough" if there are multiple WebViews
+        // and we want them all to respect their settings.
+        // But if we have multiple measures, we want to target ONLY ours.
+        
+        // For now, let's just apply to the child window found.
+        // EnableWindow(FALSE) makes it ignore mouse input (Clickthrough=1)
+        // EnableWindow(TRUE) makes it accept mouse input (Clickthrough=0)
+        EnableWindow(child, !measure->clickthrough);
+        
+        child = GetWindow(child, GW_HWNDNEXT);
+    }
 }
 
 PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
@@ -136,6 +173,7 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
     int newX = RmReadInt(rm, L"X", 0);
     int newY = RmReadInt(rm, L"Y", 0);
     bool newVisible = RmReadInt(rm, L"Hidden", 0) == 0;
+    bool newClickthrough = RmReadInt(rm, L"Clickthrough", 0) != 0;
     
     // Check if URL has changed (requires recreation)
     bool urlChanged = (newUrl != measure->url);
@@ -147,6 +185,7 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
                              newY != measure->y);
     
     bool visibilityChanged = (newVisible != measure->visible);
+    bool clickthroughChanged = (newClickthrough != measure->clickthrough);
     
     // Update stored values
     measure->url = newUrl;
@@ -155,6 +194,7 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
     measure->x = newX;
     measure->y = newY;
     measure->visible = newVisible;
+    measure->clickthrough = newClickthrough;
     
     // Only create WebView2 if not initialized OR if URL changed
     if (!measure->initialized || urlChanged)
@@ -191,32 +231,69 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
         {
             measure->webViewController->put_IsVisible(measure->visible ? TRUE : FALSE);
         }
+        
+        if (clickthroughChanged)
+        {
+            UpdateClickthrough(measure);
+        }
     }
 }
 
 PLUGIN_EXPORT double Update(void* data)
 {
     Measure* measure = (Measure*)data;
+    
+    // Call JavaScript OnUpdate callback if WebView is initialized
+    if (measure->initialized && measure->webView)
+    {
+        measure->webView->ExecuteScript(
+            L"(function() { if (typeof window.OnUpdate === 'function') { var result = window.OnUpdate(); return result !== undefined ? String(result) : ''; } return ''; })();",
+            Callback<ICoreWebView2ExecuteScriptCompletedHandler>(
+                [measure](HRESULT errorCode, LPCWSTR resultObjectAsJson) -> HRESULT
+                {
+                    if (SUCCEEDED(errorCode) && resultObjectAsJson)
+                    {
+                        // Remove quotes from JSON string result
+                        std::wstring result = resultObjectAsJson;
+                        if (result.length() >= 2 && result.front() == L'"' && result.back() == L'"')
+                        {
+                            result = result.substr(1, result.length() - 2);
+                        }
+                        
+                        // Store the callback result
+                        if (!result.empty() && result != L"null")
+                        {
+                            measure->callbackResult = result;
+                        }
+                        
+                        // Trigger Rainmeter redraw after callback completes
+                        if (measure->skin)
+                        {
+                            RmExecute(measure->skin, L"!UpdateMeter *");
+                            RmExecute(measure->skin, L"!Redraw");
+                        }
+                    }
+                    return S_OK;
+                }
+            ).Get()
+        );
+    }
+    
     return measure->initialized ? 1.0 : 0.0;
 }
 
 PLUGIN_EXPORT LPCWSTR GetString(void* data)
 {
     Measure* measure = (Measure*)data;
-    static std::wstring result;
     
-    if (measure->initialized)
+    // Return the callback result if available, otherwise return "0"
+    if (!measure->callbackResult.empty())
     {
-        result = L"WebView2 Initialized";
-    }
-    else
-    {
-        result = L"WebView2 Initializing...";
+        return measure->callbackResult.c_str();
     }
     
-    return result.c_str();
+    return L"0";
 }
-
 PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args)
 {
     Measure* measure = (Measure*)data;
@@ -252,10 +329,6 @@ PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args)
     {
         measure->webView->GoForward();
     }
-    else if (_wcsicmp(action.c_str(), L"GoForward") == 0)
-    {
-        measure->webView->GoForward();
-    }
     else if (_wcsicmp(action.c_str(), L"ExecuteScript") == 0)
     {
         if (!param.empty())
@@ -275,7 +348,75 @@ PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args)
     {
         measure->webView->OpenDevToolsWindow();
     }
+}
 
+// Generic JavaScript function caller
+PLUGIN_EXPORT LPCWSTR CallJS(void* data, const int argc, const WCHAR* argv[])
+{
+    Measure* measure = (Measure*)data;
+    
+    if (!measure || !measure->initialized || !measure->webView)
+        return L"";
+    
+    if (argc == 0 || !argv[0])
+        return L"";
+    
+    // Build unique key for this call: functionName|arg1|arg2...
+    std::wstring key = argv[0];
+    for (int i = 1; i < argc; i++)
+    {
+        key += L"|";
+        key += argv[i];
+    }
+    
+    // Build JavaScript call: functionName(arg1, arg2, ...)
+    std::wstring jsCode = L"(function() { try { if (typeof " + std::wstring(argv[0]) + L" === 'function') { var result = " + std::wstring(argv[0]) + L"(";
+    
+    // Add arguments if provided
+    for (int i = 1; i < argc; i++)
+    {
+        if (i > 1) jsCode += L", ";
+        jsCode += L"'" + std::wstring(argv[i]) + L"'";
+    }
+    
+    jsCode += L"); return result !== undefined ? String(result) : ''; } return 'Function not found'; } catch(e) { return 'Error: ' + e.message; } })();";
+    
+    // Execute asynchronously and update cache
+    measure->webView->ExecuteScript(
+        jsCode.c_str(),
+        Callback<ICoreWebView2ExecuteScriptCompletedHandler>(
+            [measure, key](HRESULT errorCode, LPCWSTR resultObjectAsJson) -> HRESULT
+            {
+                if (SUCCEEDED(errorCode) && resultObjectAsJson)
+                {
+                    std::wstring result = resultObjectAsJson;
+                    if (result.length() >= 2 && result.front() == L'"' && result.back() == L'"')
+                    {
+                        result = result.substr(1, result.length() - 2);
+                    }
+                    
+                    if (!result.empty() && result != L"null")
+                    {
+                        // Update cache for this specific call
+                        measure->jsResults[key] = result;
+                    }
+                }
+                return S_OK;
+            }
+        ).Get()
+    );
+    
+    // Return cached result if available, otherwise "0"
+    if (measure->jsResults.find(key) != measure->jsResults.end())
+    {
+        measure->buffer = measure->jsResults[key];
+    }
+    else
+    {
+        measure->buffer = L"0";
+    }
+    
+    return measure->buffer.c_str();
 }
 
 PLUGIN_EXPORT void Finalize(void* data)

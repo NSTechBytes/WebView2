@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS Interaction Demo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>JS Interaction</h1>
+    
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">OnUpdate Cycle</span>
+                <span class="card-subtitle">Updates every second</span>
+            </div>
+            <div id="update-display" class="value-display">Waiting...</div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Event Log</span>
+                <span class="card-subtitle">Recent activity</span>
+            </div>
+            <div id="log-container" class="log-container"></div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">CallJS Demo</span>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                Rainmeter is calling <code>addNumbers(15, 25)</code> via section variable.
+            </p>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+                Check the Rainmeter skin to see the result!
+            </p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
