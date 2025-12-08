@@ -185,9 +185,26 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
     bool newVisible = RmReadInt(rm, L"Hidden", 0) == 0;
     bool newClickthrough = RmReadInt(rm, L"Clickthrough", 0) != 0;
     
+    // Read OnFinishAction
+    std::wstring newOnFinishAction;
+    LPCWSTR onFinishOption = RmReadString(rm, L"OnFinishAction", L"", FALSE);
+    if (onFinishOption && wcslen(onFinishOption) > 0)
+    {
+        newOnFinishAction = onFinishOption;
+    }
+
+    // Read OnPageLoadAction
+    std::wstring newOnPageLoadAction;
+    LPCWSTR onPageLoadOption = RmReadString(rm, L"OnPageLoadAction", L"", FALSE);
+    if (onPageLoadOption && wcslen(onPageLoadOption) > 0)
+    {
+        newOnPageLoadAction = onPageLoadOption;
+    }
+
     // Check if URL has changed (requires recreation)
     bool urlChanged = (newUrl != measure->url);
     
+
     // Check if dimensions or position changed (can be updated dynamically)
     bool dimensionsChanged = (newWidth != measure->width || 
                              newHeight != measure->height || 
@@ -205,7 +222,9 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
     measure->y = newY;
     measure->visible = newVisible;
     measure->clickthrough = newClickthrough;
-    
+    measure->onFinishAction = newOnFinishAction;
+    measure->onPageLoadAction = newOnPageLoadAction;
+
     // Only create WebView2 if not initialized OR if URL changed
     if (!measure->initialized || urlChanged)
     {
@@ -220,7 +239,13 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
         else
         {
             // First initialization - create WebView2
+            if (measure->isCreationInProgress)
+            {
+                // Avoid re-entrancy if creation is already in progress
+                return;
+            }
             CreateWebView2(measure);
+
         }
     }
     else
