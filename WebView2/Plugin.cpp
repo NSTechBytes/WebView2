@@ -300,13 +300,6 @@ PLUGIN_EXPORT double Update(void* data)
                         {
                             measure->callbackResult = result;
                         }
-                        
-                        // Trigger Rainmeter redraw after callback completes
-                        if (measure->skin)
-                        {
-                            RmExecute(measure->skin, L"!UpdateMeter *");
-                            RmExecute(measure->skin, L"!Redraw");
-                        }
                     }
                     return S_OK;
                 }
