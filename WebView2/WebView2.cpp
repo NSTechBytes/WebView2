@@ -6,12 +6,19 @@
 // Create WebView2 environment and controller
 void CreateWebView2(Measure* measure)
 {
+    if (measure && measure->isCreationInProgress)
+    {
+        return;
+    }
+
     if (!measure || !measure->skinWindow)
     {
         if (measure && measure->rm)
             RmLog(measure->rm, LOG_ERROR, L"WebView2: Invalid measure or skin window");
         return;
     }
+
+    measure->isCreationInProgress = true;
     
     // Create user data folder in TEMP directory to avoid permission issues
     wchar_t tempPath[MAX_PATH];
@@ -28,6 +35,7 @@ void CreateWebView2(Measure* measure)
             measure,
             &Measure::CreateEnvironmentHandler
         ).Get()
+
     );
     
     if (FAILED(hr))
@@ -46,6 +54,7 @@ HRESULT Measure::CreateEnvironmentHandler(HRESULT result, ICoreWebView2Environme
 {
     if (FAILED(result))
     {
+        isCreationInProgress = false;
         if (rm)
         {
             wchar_t errorMsg[256];
@@ -70,6 +79,7 @@ HRESULT Measure::CreateEnvironmentHandler(HRESULT result, ICoreWebView2Environme
 // Controller creation callback
 HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller* controller)
 {
+
     if (FAILED(result))
     {
         if (rm)
@@ -78,6 +88,7 @@ HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller
             swprintf_s(errorMsg, L"WebView2: Failed to create controller (HRESULT: 0x%08X)", result);
             RmLog(rm, LOG_ERROR, errorMsg);
         }
+        isCreationInProgress = false;
         return result;
     }
     
@@ -85,6 +96,7 @@ HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller
     {
         if (rm)
             RmLog(rm, LOG_ERROR, L"WebView2: Controller is null");
+        isCreationInProgress = false;
         return S_FALSE;
     }
     
@@ -166,16 +178,15 @@ HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller
                                 // Store the callback result
                                 if (!result.empty() && result != L"null")
                                 {
-                                    callbackResult = result;
-                                    
-                                    // Trigger Rainmeter redraw after callback completes
-                                    if (skin)
-                                    {
-                                        RmExecute(skin, L"!UpdateMeter *");
-                                        RmExecute(skin, L"!Redraw");
-                                    }
+                                    callbackResult = result;                                  
                                 }
                             }
+
+                            if (wcslen(onPageLoadAction.c_str()) > 0)
+                            {
+                                RmExecute(skin, onPageLoadAction.c_str());
+                            }
+
                             return S_OK;
                         }
                     ).Get()
@@ -194,11 +205,19 @@ HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller
     
     initialized = true;
     
+    isCreationInProgress = false;
+
     if (rm)
-        RmLog(rm, LOG_NOTICE, L"WebView2: Initialized successfully with COM Host Objects");
+        RmLog(rm, LOG_DEBUG, L"WebView2: Initialized successfully with COM Host Objects");
     
+    if (wcslen(onFinishAction.c_str()) > 0)
+    {
+        RmExecute(skin, onFinishAction.c_str());
+    }
+
     // Apply initial clickthrough state
     UpdateClickthrough(this);
     
     return S_OK;
 }
+
