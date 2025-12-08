@@ -6,15 +6,20 @@
 // Create WebView2 environment and controller
 void CreateWebView2(Measure* measure)
 {
-    if (measure && measure->isCreationInProgress)
-    {
-        return;
-    }
-
     if (!measure || !measure->skinWindow)
     {
         if (measure && measure->rm)
             RmLog(measure->rm, LOG_ERROR, L"WebView2: Invalid measure or skin window");
+        return;
+    }
+
+    if (measure->initialized)
+    {
+        return;
+    }
+    
+    if (measure->isCreationInProgress)
+    {
         return;
     }
 
@@ -40,6 +45,7 @@ void CreateWebView2(Measure* measure)
     
     if (FAILED(hr))
     {
+        measure->isCreationInProgress = false;
         if (measure->rm)
         {
             wchar_t errorMsg[512];
