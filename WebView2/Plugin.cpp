@@ -1,6 +1,7 @@
 // Copyright (C) 2025 nstechbytes. All rights reserved.
 #include "Plugin.h"
 #include "../API/RainmeterAPI.h"
+#include <chrono>
 
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "oleaut32.lib")
@@ -274,40 +275,114 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
     }
 }
 
+// Synchronously execute script on the same thread as the WebView (pumps messages).
+static std::wstring ExecuteScriptSync(ICoreWebView2* webview, const std::wstring& script, DWORD timeoutMs = 300)
+{
+    if (!webview) return L"";
+
+    HANDLE hEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    if (!hEvent) return L"";
+
+    std::wstring resultJson;
+    HRESULT execHr = E_FAIL;
+
+    auto handler = Callback<ICoreWebView2ExecuteScriptCompletedHandler>(
+        [&resultJson, &execHr, hEvent](HRESULT errorCode, LPCWSTR resultObjectAsJson) -> HRESULT
+        {
+            execHr = errorCode;
+            if (SUCCEEDED(errorCode) && resultObjectAsJson)
+            {
+                resultJson.assign(resultObjectAsJson);
+            }
+            SetEvent(hEvent);
+            return S_OK;
+        }
+    );
+
+    HRESULT hr = webview->ExecuteScript(script.c_str(), handler.Get());
+    if (FAILED(hr))
+    {
+        CloseHandle(hEvent);
+        return L"";
+    }
+
+    auto start = std::chrono::steady_clock::now();
+    for (;;)
+    {
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - start).count();
+        DWORD remaining = (elapsed >= timeoutMs) ? 0 : static_cast<DWORD>(timeoutMs - elapsed);
+
+        DWORD wait = ::MsgWaitForMultipleObjects(1, &hEvent, FALSE, remaining, QS_ALLINPUT);
+
+        if (wait == WAIT_OBJECT_0)
+        {
+            // event signaled
+            break;
+        }
+        else if (wait == WAIT_OBJECT_0 + 1)
+        {
+            // pump messages so callback runs
+            MSG msg;
+            while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+            {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+            // continue loop (respect remaining timeout)
+        }
+        else if (wait == WAIT_TIMEOUT)
+        {
+            // timeout; break and treat as failure/empty
+            break;
+        }
+        else
+        {
+            // unexpected error; break
+            break;
+        }
+    }
+
+    CloseHandle(hEvent);
+
+    if (FAILED(execHr))
+    {
+        return L"";
+    }
+
+    return resultJson;
+}
+
 PLUGIN_EXPORT double Update(void* data)
 {
     Measure* measure = (Measure*)data;
     
-    // Call JavaScript OnUpdate callback if WebView is initialized
-    if (measure->initialized && measure->webView)
+    // If not initialized return 0.0
+    if (!measure->initialized || !measure->webView)
+        return 0.0;
+
+    std::wstring script = L"(function() { try { if (typeof window.OnUpdate === 'function') { var result = window.OnUpdate(); return result !== undefined ? String(result) : ''; } return ''; } catch(e) { return ''; } })();";
+
+    // Synchronously execute the script on the plugin main thread, pumping messages.
+    std::wstring json = ExecuteScriptSync(measure->webView.get(), script, 500);
+
+    if (!json.empty())
     {
-        measure->webView->ExecuteScript(
-            L"(function() { if (typeof window.OnUpdate === 'function') { var result = window.OnUpdate(); return result !== undefined ? String(result) : ''; } return ''; })();",
-            Callback<ICoreWebView2ExecuteScriptCompletedHandler>(
-                [measure](HRESULT errorCode, LPCWSTR resultObjectAsJson) -> HRESULT
-                {
-                    if (SUCCEEDED(errorCode) && resultObjectAsJson)
-                    {
-                        // Remove quotes from JSON string result
-                        std::wstring result = resultObjectAsJson;
-                        if (result.length() >= 2 && result.front() == L'"' && result.back() == L'"')
-                        {
-                            result = result.substr(1, result.length() - 2);
-                        }
-                        
-                        // Store the callback result
-                        if (!result.empty() && result != L"null")
-                        {
-                            measure->callbackResult = result;
-                        }
-                    }
-                    return S_OK;
-                }
-            ).Get()
-        );
+        std::wstring result = json;
+        if (result.length() >= 2 && result.front() == L'"' && result.back() == L'"')
+        {
+            result = result.substr(1, result.length() - 2);
+        }
+
+        // Store the latest result
+        if (!result.empty() && result != L"null")
+        {
+            measure->callbackResult = result;
+        }
     }
     
-    return measure->initialized ? 1.0 : 0.0;
+    // Return 1.0 when initialized 
+    return 1.0;
 }
 
 PLUGIN_EXPORT LPCWSTR GetString(void* data)
@@ -322,6 +397,7 @@ PLUGIN_EXPORT LPCWSTR GetString(void* data)
     
     return L"0";
 }
+
 PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args)
 {
     Measure* measure = (Measure*)data;
