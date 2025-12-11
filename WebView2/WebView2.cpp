@@ -142,7 +142,10 @@ HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller
     
     // Set initial visibility
     webViewController->put_IsVisible(visible ? TRUE : FALSE);
-    
+
+	// Set initial zoom factor
+    webViewController->put_ZoomFactor(zoomFactor);
+
     // Transparent background
     auto controller2 = webViewController.query<ICoreWebView2Controller2>();
     if (controller2)
