@@ -51,10 +51,10 @@ void CreateWebView2(Measure* measure)
             swprintf_s(errorMsg, L"WebView2: Failed to start creation process (HRESULT: 0x%08X). Make sure WebView2 Runtime is installed.", hr);
             RmLog(measure->rm, LOG_ERROR, errorMsg);
         }
-        if (measure->skin && wcslen(measure->OnWebViewFailAction.c_str()) > 0)
-		{
-				RmExecute(measure->skin, measure->OnWebViewFailAction.c_str());
-		}
+        if (measure->skin && wcslen(measure->onWebViewFailAction.c_str()) > 0)
+        {
+            RmExecute(measure->skin, measure->onWebViewFailAction.c_str());
+        }
         measure->isCreationInProgress = false;
     }
 }
@@ -70,10 +70,10 @@ HRESULT Measure::CreateEnvironmentHandler(HRESULT result, ICoreWebView2Environme
             swprintf_s(errorMsg, L"WebView2: Failed to create environment (HRESULT: 0x%08X)", result);
             RmLog(rm, LOG_ERROR, errorMsg);
         }
-		if (skin && wcslen(OnWebViewFailAction.c_str()) > 0)
-		{
-			RmExecute(skin, OnWebViewFailAction.c_str());
-		}
+        if (skin && wcslen(onWebViewFailAction.c_str()) > 0)
+        {
+            RmExecute(skin, onWebViewFailAction.c_str());
+        }
         isCreationInProgress = false;
         return result;
     }
@@ -102,10 +102,10 @@ HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller
             swprintf_s(errorMsg, L"WebView2: Failed to create controller (HRESULT: 0x%08X)", result);
             RmLog(rm, LOG_ERROR, errorMsg);
         }
-		if (skin && wcslen(OnWebViewFailAction.c_str()) > 0)
-		{
-			RmExecute(skin, OnWebViewFailAction.c_str());
-		}
+        if (skin && wcslen(onWebViewFailAction.c_str()) > 0)
+        {
+            RmExecute(skin, onWebViewFailAction.c_str());
+        }
         isCreationInProgress = false;
         return result;
     }
@@ -114,10 +114,10 @@ HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller
     {
         if (rm)
             RmLog(rm, LOG_ERROR, L"WebView2: Controller is null");
-        if (skin && wcslen(OnWebViewFailAction.c_str()) > 0)
-		{
-			RmExecute(skin, OnWebViewFailAction.c_str());
-		}
+        if (skin && wcslen(onWebViewFailAction.c_str()) > 0)
+        {
+            RmExecute(skin, onWebViewFailAction.c_str());
+        }
         isCreationInProgress = false;
         return S_FALSE;
     }
@@ -176,26 +176,81 @@ HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller
         L"window.RainmeterAPI = chrome.webview.hostObjects.sync.RainmeterAPI",
         nullptr
     );
-    
-    // Add NavigationCompleted event to call OnInitialize after page loads
+
+    // Add SourceChanged event to detect changes in URL
+    webView->add_SourceChanged(
+        Callback<ICoreWebView2SourceChangedEventHandler>(
+            [this](ICoreWebView2* sender, ICoreWebView2SourceChangedEventArgs* args) -> HRESULT
+            {
+                wil::unique_cotaskmem_string updatedUri;
+
+                if (SUCCEEDED(sender->get_Source(&updatedUri)) && updatedUri.get() != nullptr)
+                {
+                    std::wstring newUrl = updatedUri.get();
+
+                    if (currentUrl != newUrl)
+                    {
+                        // URL changed 
+                        isFirstLoad = true;
+                        currentUrl = newUrl;       
+                    }
+                    else
+                    {
+                        // URL did not change
+                        isFirstLoad = false;
+                    }
+                }
+                return S_OK;
+            }
+        ).Get(),
+        nullptr
+    );
+
+	// Add NavigationStarting event to call action when navigation starts
+    webView->add_NavigationStarting(
+    Callback<ICoreWebView2NavigationStartingEventHandler>(
+        [this](ICoreWebView2* sender, ICoreWebView2NavigationStartingEventArgs* args) -> HRESULT
+        {
+            if (wcslen(onPageLoadStartAction.c_str()) > 0)
+            {
+                if (skin)
+                    RmExecute(skin, onPageLoadStartAction.c_str());
+            }
+            return S_OK;
+        }
+    ).Get(),
+    nullptr
+    );
+
+	// Add ContentLoading event to call action when page starts loading
+    webView->add_ContentLoading(
+        Callback<ICoreWebView2ContentLoadingEventHandler>(
+            [this](ICoreWebView2* sender, ICoreWebView2ContentLoadingEventArgs* args) -> HRESULT
+            {
+                if (wcslen(onPageLoadingAction.c_str()) > 0)
+                {
+                    if (skin)
+                        RmExecute(skin, onPageLoadingAction.c_str());
+                }
+                return S_OK;
+            }
+        ).Get(),
+        nullptr
+    );
+
+	// Add NavigationCompleted event to call OnInitialize after page loads and handle load actions
     webView->add_NavigationCompleted(
         Callback<ICoreWebView2NavigationCompletedEventHandler>(
             [this](ICoreWebView2* sender, ICoreWebView2NavigationCompletedEventArgs* args) -> HRESULT
             {
-                // Inject script to capture page load events for drag/move and context menu
-				webView->ExecuteScript(
-					L"let rm_raincontext=false,rm_RaincontextOn=false,rm_RaincontextClientX=0,rm_RaincontextClientY=0;function rm_setRaincontext(v){rm_raincontext=!!v;if(!rm_raincontext)rm_RaincontextOn=false;}document.body.onpointerdown=e=>{if(!rm_raincontext)return;if(e.button===0&&e.ctrlKey){e.preventDefault();e.stopImmediatePropagation();rm_RaincontextOn=true;rm_RaincontextClientX=e.clientX;rm_RaincontextClientY=e.clientY;try{document.body.setPointerCapture(e.pointerId);}catch{}}};document.body.onpointermove=e=>{if(!rm_raincontext||!rm_RaincontextOn)return;e.preventDefault();RainmeterAPI.Bang('[!Move '+(e.screenX-RainmeterAPI.ReadFormula('X',0)-rm_RaincontextClientX)+' '+(e.screenY-RainmeterAPI.ReadFormula('Y',0)-rm_RaincontextClientY)+']');};document.body.onpointerup=e=>{if(!rm_raincontext)return;if(e.button===0){e.preventDefault();rm_RaincontextOn=false;try{document.body.releasePointerCapture(e.pointerId);}catch{}}};document.body.oncontextmenu=e=>{if(!rm_raincontext)return;if(e.button===2&&e.ctrlKey){e.preventDefault();RainmeterAPI.Bang('[!SkinMenu]');}};",
-					Callback<ICoreWebView2ExecuteScriptCompletedHandler>(
-						[this](HRESULT errorCode, LPCWSTR resultObjectAsJson) -> HRESULT
-						{
-							return S_OK;
-						}
-					).Get()
-				);
+                isAllowDualControlInjected = false;
 
-				// Apply initial raincontext state
-				UpdateRaincontext(this);
-                
+                // Inject script to capture page load events for drag/move and context menu
+                if (allowDualControl)
+                {
+                    InjectAllowDualControl(this);
+                }
+               
                 // Call JavaScript OnInitialize callback if it exists and capture return value
                 webView->ExecuteScript(
                     L"(function() { if (typeof window.OnInitialize === 'function') { var result = window.OnInitialize(); return result !== undefined ? String(result) : ''; } return ''; })();",
@@ -210,47 +265,47 @@ HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller
                                 {
                                     result = result.substr(1, result.length() - 2);
                                 }
-                                
+
                                 // Store the callback result
                                 if (!result.empty() && result != L"null")
                                 {
-                                    callbackResult = result;                                  
+                                    callbackResult = result;
                                 }
                             }
-
-							if (isFirstLoad)
-							{
-								if (wcslen(onPageFirstLoadAction.c_str()) > 0)
-								{
-									if (skin)
-										RmExecute(skin, onPageFirstLoadAction.c_str());
-								}
-								isFirstLoad = false;
-							}
-							else {
-								if (wcslen(onPageReloadAction.c_str()) > 0)
-								{
-									if (skin)
-										RmExecute(skin, onPageReloadAction.c_str());
-								}
-							}
-
-							if (wcslen(onPageLoadAction.c_str()) > 0)
-							{
-								if (skin)
-									RmExecute(skin, onPageLoadAction.c_str());
-							}
-
                             return S_OK;
                         }
                     ).Get()
                 );
+
+				if (isFirstLoad) // First load
+                {
+                    if (wcslen(onPageFirstLoadAction.c_str()) > 0)
+                    {
+                        if (skin)
+                            RmExecute(skin, onPageFirstLoadAction.c_str());
+                    }
+                    isFirstLoad = false;
+                }
+				else // Page reload
+                {
+                    if (wcslen(onPageReloadAction.c_str()) > 0)
+                    {
+                        if (skin)
+                            RmExecute(skin, onPageReloadAction.c_str());
+                    }
+                }
+				// Common action after any page load
+                if (wcslen(onPageLoadFinishAction.c_str()) > 0)
+                {
+                    if (skin)
+                        RmExecute(skin, onPageLoadFinishAction.c_str());
+                }
                 return S_OK;
             }
         ).Get(),
         nullptr
     );
-    
+
     // Navigate to URL
     if (!url.empty())
     {
@@ -264,10 +319,10 @@ HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller
     if (rm)
         RmLog(rm, LOG_NOTICE, L"WebView2: Initialized successfully with COM Host Objects");
     
-	if (wcslen(OnWebViewLoadAction.c_str()) > 0)
-	{
-		RmExecute(skin, OnWebViewLoadAction.c_str());
-	}
+    if (wcslen(onWebViewLoadAction.c_str()) > 0)
+    {
+        RmExecute(skin, onWebViewLoadAction.c_str());
+    }
 
     // Apply initial clickthrough state
     UpdateClickthrough(this);
