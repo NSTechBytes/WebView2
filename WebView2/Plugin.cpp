@@ -51,8 +51,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 // Measure constructor
 Measure::Measure() : rm(nullptr), skin(nullptr), skinWindow(nullptr), 
             measureName(nullptr),
-            width(800), height(600), x(0), y(0), 
-            visible(true), initialized(false), clickthrough(false), webMessageToken{}
+            width(800), height(600), x(0), y(0), zoomFactor(1.0),
+            visible(true), initialized(false), clickthrough(false), allowDualControl(true), webMessageToken{}
 {
     // Initialize COM for this thread if not already done
     if (!g_comInitialized)
@@ -114,8 +114,66 @@ void UpdateClickthrough(Measure* measure)
         // EnableWindow(FALSE) makes it ignore mouse input (Clickthrough=1)
         // EnableWindow(TRUE) makes it accept mouse input (Clickthrough=0)
         EnableWindow(child, !measure->clickthrough);
+
+        // If enabling clickthrough (disabling input), ensure it loses focus
+        if (measure->clickthrough)
+        {
+            HWND focusedWindow = GetFocus();
+            if (focusedWindow && (focusedWindow == child || IsChild(child, focusedWindow)))
+            {
+                SetFocus(nullptr);
+            }
+        }
         
         child = GetWindow(child, GW_HWNDNEXT);
+    }
+}
+
+// Inject AllowDualControl script into the WebView
+void InjectAllowDualControl(Measure* measure)
+{
+    if (!measure->webView) return;
+    // Inject script to capture page load events for drag/move and context menu
+    measure->webView->ExecuteScript(
+        L"let rm_AllowDualControl=false,rm_AllowDualControlOn=false,rm_AllowDualControlClientX=0,rm_AllowDualControlClientY=0;function rm_SetAllowDualControl(v){rm_AllowDualControl=!!v;if(!rm_AllowDualControl)rm_AllowDualControlOn=false;}document.body.onpointerdown=e=>{if(!rm_AllowDualControl)return;if(e.button===0&&e.ctrlKey){e.preventDefault();e.stopImmediatePropagation();rm_AllowDualControlOn=true;rm_AllowDualControlClientX=e.clientX;rm_AllowDualControlClientY=e.clientY;try{document.body.setPointerCapture(e.pointerId);}catch{}}};document.body.onpointermove=e=>{if(!rm_AllowDualControl||!rm_AllowDualControlOn)return;e.preventDefault();RainmeterAPI.Bang('[!Move '+(e.screenX-RainmeterAPI.ReadFormula('X',0)-rm_AllowDualControlClientX)+' '+(e.screenY-RainmeterAPI.ReadFormula('Y',0)-rm_AllowDualControlClientY)+']');};document.body.onpointerup=e=>{if(!rm_AllowDualControl)return;if(e.button===0){e.preventDefault();rm_AllowDualControlOn=false;try{document.body.releasePointerCapture(e.pointerId);}catch{}}};document.body.oncontextmenu=e=>{if(!rm_AllowDualControl)return;if(e.button===2&&e.ctrlKey){e.preventDefault();RainmeterAPI.Bang('[!SkinMenu]');}};",
+        Callback<ICoreWebView2ExecuteScriptCompletedHandler>(
+            [measure](HRESULT errorCode, LPCWSTR resultObjectAsJson) -> HRESULT
+            {
+                return S_OK;
+            }
+        ).Get()
+    );
+	measure->isAllowDualControlInjected = true;
+    UpdateAllowDualControl(measure);
+}
+
+// Update AllowDualControl state in the WebView
+void UpdateAllowDualControl(Measure* measure)
+{
+    if (!measure->webView) return;
+
+    if (measure->allowDualControl)
+    {
+        measure->webView->ExecuteScript(
+            L"rm_SetAllowDualControl(true);",
+            Callback<ICoreWebView2ExecuteScriptCompletedHandler>(
+                [measure](HRESULT errorCode, LPCWSTR resultObjectAsJson) -> HRESULT
+                {
+                    return S_OK;
+                }
+            ).Get()
+        );
+    }
+    else {
+        measure->webView->ExecuteScript(
+            L"rm_SetAllowDualControl(false);",
+            Callback<ICoreWebView2ExecuteScriptCompletedHandler>(
+                [measure](HRESULT errorCode, LPCWSTR resultObjectAsJson) -> HRESULT
+                {
+                    return S_OK;
+                }
+            ).Get()
+        );
     }
 }
 
@@ -172,12 +230,72 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
     int newHeight = RmReadInt(rm, L"H", 600);
     int newX = RmReadInt(rm, L"X", 0);
     int newY = RmReadInt(rm, L"Y", 0);
-    bool newVisible = RmReadInt(rm, L"Hidden", 0) == 0;
-    bool newClickthrough = RmReadInt(rm, L"Clickthrough", 0) != 0;
-    
+	double newZoomFactor = RmReadFormula(rm, L"ZoomFactor", 1.0);
+    bool newVisible = RmReadInt(rm, L"Hidden", 0) <= 0;
+   	bool newClickthrough = RmReadInt(rm, L"Clickthrough", 0) >= 1;
+	
+	// Read AllowDualControl for Yincognito's script injection
+    bool newAllowDualControl = RmReadInt(rm, L"AllowDualControl", 1) >= 1;
+
+	// Read OnWebViewLoadAction
+	std::wstring newOnWebViewLoadAction;
+	LPCWSTR onWebViewLoadOption = RmReadString(rm, L"OnWebViewLoadAction", L"", FALSE);
+	if (onWebViewLoadOption && wcslen(onWebViewLoadOption) > 0)
+	{
+    	newOnWebViewLoadAction = onWebViewLoadOption;
+	}
+
+	// Read OnWebViewFailAction
+	std::wstring newOnWebViewFailAction;
+	LPCWSTR onWebViewFailOption = RmReadString(rm, L"OnWebViewFailAction", L"", FALSE);
+	if (onWebViewFailOption && wcslen(onWebViewFailOption) > 0)
+	{
+    	newOnWebViewFailAction = onWebViewFailOption;
+	}
+
+	// Read OnPageLoadStartAction
+	std::wstring newOnPageLoadStartAction;
+	LPCWSTR onPageLoadStartOption = RmReadString(rm, L"OnPageLoadStartAction", L"", FALSE);
+	if (onPageLoadStartOption && wcslen(onPageLoadStartOption) > 0)
+	{
+    	newOnPageLoadStartAction = onPageLoadStartOption;
+	}
+
+	// Read OnPageLoadingAction
+	std::wstring newOnPageLoadingAction;
+	LPCWSTR onPageLoadingOption = RmReadString(rm, L"OnPageLoadingAction", L"", FALSE);
+	if (onPageLoadingOption && wcslen(onPageLoadingOption) > 0)
+	{
+    	newOnPageLoadingAction = onPageLoadingOption;
+	}
+
+	// Read OnPageLoadFinishAction
+	std::wstring newOnPageLoadFinishAction;
+	LPCWSTR onPageLoadFinishOption = RmReadString(rm, L"OnPageLoadFinishAction", L"", FALSE);
+	if (onPageLoadFinishOption && wcslen(onPageLoadFinishOption) > 0)
+	{
+    	newOnPageLoadFinishAction = onPageLoadFinishOption;
+	}
+
+	// Read OnPageFirstLoadAction
+	std::wstring newOnPageFirstLoadAction;
+	LPCWSTR onPageFirstLoadOption = RmReadString(rm, L"OnPageFirstLoadAction", L"", FALSE);
+	if (onPageFirstLoadOption && wcslen(onPageFirstLoadOption) > 0)
+	{
+    	newOnPageFirstLoadAction = onPageFirstLoadOption;
+	}
+
+	// Read OnPageReloadAction
+	std::wstring newOnPageReloadAction;
+	LPCWSTR onPageReloadOption = RmReadString(rm, L"OnPageReloadAction", L"", FALSE);
+	if (onPageReloadOption && wcslen(onPageReloadOption) > 0)
+	{
+    	newOnPageReloadAction = onPageReloadOption;
+	}
+	
     // Check if URL has changed (requires recreation)
     bool urlChanged = (newUrl != measure->url);
-    
+
     // Check if dimensions or position changed (can be updated dynamically)
     bool dimensionsChanged = (newWidth != measure->width || 
                              newHeight != measure->height || 
@@ -186,16 +304,27 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
     
     bool visibilityChanged = (newVisible != measure->visible);
     bool clickthroughChanged = (newClickthrough != measure->clickthrough);
-    
+	bool allowDualControlChanged = (newAllowDualControl != measure->allowDualControl);
+	bool zoomFactorChanged = (newZoomFactor != measure->zoomFactor);
+	
     // Update stored values
     measure->url = newUrl;
     measure->width = newWidth;
     measure->height = newHeight;
     measure->x = newX;
     measure->y = newY;
+	measure->zoomFactor = newZoomFactor;
     measure->visible = newVisible;
     measure->clickthrough = newClickthrough;
-    
+	measure->allowDualControl = newAllowDualControl;
+    measure->onWebViewLoadAction = newOnWebViewLoadAction;
+    measure->onWebViewFailAction = newOnWebViewFailAction;
+    measure->onPageLoadStartAction = newOnPageLoadStartAction;
+    measure->onPageLoadingAction = newOnPageLoadingAction;
+    measure->onPageLoadFinishAction = newOnPageLoadFinishAction;
+    measure->onPageFirstLoadAction = newOnPageFirstLoadAction;
+    measure->onPageReloadAction = newOnPageReloadAction;
+
     // Only create WebView2 if not initialized OR if URL changed
     if (!measure->initialized || urlChanged)
     {
@@ -210,6 +339,11 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
         else
         {
             // First initialization - create WebView2
+            if (measure->isCreationInProgress)
+            {
+                // Avoid re-entrancy if creation is already in progress
+                return;
+            }
             CreateWebView2(measure);
         }
     }
@@ -231,10 +365,25 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue)
         {
             measure->webViewController->put_IsVisible(measure->visible ? TRUE : FALSE);
         }
+		
+        if (zoomFactorChanged && measure->webViewController)
+        {
+            measure->webViewController->put_ZoomFactor(measure->zoomFactor);
+		}
         
         if (clickthroughChanged)
         {
             UpdateClickthrough(measure);
+        }
+
+        if (allowDualControlChanged)
+        {
+            if (!measure->isAllowDualControlInjected)
+            {
+                InjectAllowDualControl(measure);
+            }
+			else
+            UpdateAllowDualControl(measure);
         }
     }
 }
@@ -265,13 +414,6 @@ PLUGIN_EXPORT double Update(void* data)
                         {
                             measure->callbackResult = result;
                         }
-                        
-                        // Trigger Rainmeter redraw after callback completes
-                        if (measure->skin)
-                        {
-                            RmExecute(measure->skin, L"!UpdateMeter *");
-                            RmExecute(measure->skin, L"!Redraw");
-                        }
                     }
                     return S_OK;
                 }
@@ -294,6 +436,7 @@ PLUGIN_EXPORT LPCWSTR GetString(void* data)
     
     return L"0";
 }
+
 PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args)
 {
     Measure* measure = (Measure*)data;
