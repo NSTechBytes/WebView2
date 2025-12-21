@@ -140,7 +140,7 @@ HRESULT Measure::CreateEnvironmentHandler(HRESULT result, ICoreWebView2Environme
 		auto controllerOptions4 = controllerOptions.query<ICoreWebView2ControllerOptions4>();
 		if (controllerOptions4)
 		{
-			controllerOptions4->put_AllowHostInputProcessing(TRUE); // Allow Host Input Processing
+			controllerOptions4->put_AllowHostInputProcessing(FALSE); // Allow Host Input Processing
 		}
 
 		// Create Controller With Options.

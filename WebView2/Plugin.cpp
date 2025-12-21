@@ -702,7 +702,6 @@ PLUGIN_EXPORT LPCWSTR CallJS(void* data, const int argc, const WCHAR* argv[])
 PLUGIN_EXPORT void Finalize(void* data)
 {
 	Measure* measure = (Measure*)data;
-	Frames* frames = (Frames*)data;
-	delete frames;
+	StopWebView2(measure);
 	delete measure;
 }
