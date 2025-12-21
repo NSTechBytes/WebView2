@@ -9,9 +9,6 @@
     <ClCompile Include="Plugin.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="HostObjectRmAPI.h" />
     <ClInclude Include="Plugin.h" />
     <ClInclude Include="resource.h" />
@@ -22,5 +19,9 @@
   </ItemGroup>
   <ItemGroup>
     <Midl Include="HostObject.idl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
   </ItemGroup>
 </Project>
