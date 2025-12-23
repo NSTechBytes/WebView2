@@ -222,12 +222,12 @@ void UpdateAllowDualControl(Measure* measure)
 }
 
 // Inject AllowDualControl script into the WebView frame
-void InjectAllowDualControlFrame(Measure* measure, Frames* frame)
+void InjectAllowDualControlFrame(Measure* measure, Frames* webViewFrame)
 {
-	if (!frame || !frame->name) return;
-	
+	if (!webViewFrame || !webViewFrame->frame) return;
+
 	// Inject script to capture page load events for drag/move and context menu
-	HRESULT hr = frame->name->ExecuteScript(allowDualControlScript,
+	HRESULT hr = webViewFrame->frame->ExecuteScript(allowDualControlScript,
 		Callback<ICoreWebView2ExecuteScriptCompletedHandler>(
 			[](HRESULT, LPCWSTR) -> HRESULT { return S_OK; }
 		).Get()
@@ -235,17 +235,17 @@ void InjectAllowDualControlFrame(Measure* measure, Frames* frame)
 
 	if (SUCCEEDED(hr))
 	{
-		frame->injected = true;
-		UpdateAllowDualControlFrame(measure, frame);
+		webViewFrame->injected = true;
+		UpdateAllowDualControlFrame(measure, webViewFrame);
 	}
 }
 
 // Update AllowDualControl state in the WebView frame
-void UpdateAllowDualControlFrame(Measure* measure, Frames* frame)
+void UpdateAllowDualControlFrame(Measure* measure, Frames* webViewFrame)
 {
-	if (!frame || !frame->name || !frame->injected) return;
+	if (!webViewFrame || !webViewFrame->frame || !webViewFrame->injected) return;
 
-	frame->name->ExecuteScript(
+	webViewFrame->frame->ExecuteScript(
 		measure->allowDualControl
 		? L"rm_SetAllowDualControl(true);"
 		: L"rm_SetAllowDualControl(false);",
@@ -432,18 +432,18 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* /*maxValue*/)
 	if (measure->webViewFrames.empty())
 		return;
 	// Frames
-	for (Frames& frame : measure->webViewFrames)
+	for (auto& webViewFramePtr : measure->webViewFrames)
 	{
-		if (!frame.name)
+		if (!webViewFramePtr->frame)
 			continue;
 
-		if (!frame.injected)
-		{
-			InjectAllowDualControlFrame(measure, &frame);
+		if (!webViewFramePtr->injected)
+		{	
+			InjectAllowDualControlFrame(measure, webViewFramePtr.get());
 		}
 		else
 		{
-			UpdateAllowDualControlFrame(measure, &frame);
+			UpdateAllowDualControlFrame(measure, webViewFramePtr.get());
 		}
 	}
 }
@@ -582,12 +582,12 @@ PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args)
 			if (measure->webViewFrames.empty())
 				return;
 			// Frames
-			for (Frames& frame : measure->webViewFrames)
+			for (auto& webViewFramePtr : measure->webViewFrames)
 			{
-				if (!frame.name)
+				if (!webViewFramePtr->frame)
 					continue;
 
-				frame.name->ExecuteScript(
+				webViewFramePtr->frame->ExecuteScript(
 					param.c_str(),
 					Callback<ICoreWebView2ExecuteScriptCompletedHandler>(
 						[](HRESULT errorCode, LPCWSTR resultObjectAsJson) -> HRESULT
@@ -669,12 +669,12 @@ PLUGIN_EXPORT LPCWSTR CallJS(void* data, const int argc, const WCHAR* argv[])
 	if (!measure->webViewFrames.empty())
 	{
 		// Frames
-		for (Frames& frame : measure->webViewFrames)
+		for (auto& webViewFramePtr : measure->webViewFrames)
 		{
-			if (!frame.name)
+			if (!webViewFramePtr->frame)
 				continue;
 
-			frame.name->ExecuteScript(
+			webViewFramePtr->frame->ExecuteScript(
 				jsCode.c_str(),
 				Callback<ICoreWebView2ExecuteScriptCompletedHandler>(
 					[](HRESULT errorCode, LPCWSTR resultObjectAsJson) -> HRESULT
