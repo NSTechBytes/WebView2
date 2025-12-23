@@ -33,6 +33,112 @@ std::wstring NormalizeUri(const std::wstring& uri)
 	return uri.substr(0, path_start + 1);
 }
 
+void RegisterFrames(Measure* measure, ICoreWebView2Frame* rawFrame)
+{
+	wil::com_ptr<ICoreWebView2Frame> frame = rawFrame;
+
+	wil::com_ptr<ICoreWebView2Frame2> frame2;
+	frame->QueryInterface(IID_PPV_ARGS(&frame2));
+
+	wil::com_ptr<ICoreWebView2Frame5> frame5;
+	frame->QueryInterface(IID_PPV_ARGS(&frame5));
+
+	// Only proceed if we have valid interfaces
+	if (!frame2 || !frame5) return;
+
+	// Add host object
+	wil::com_ptr<HostObjectRmAPI> hostObject =
+		Microsoft::WRL::Make<HostObjectRmAPI>(measure, g_typeLib);
+
+	wil::unique_variant hostObjectVariant;
+	hostObject.query_to<IDispatch>(&hostObjectVariant.pdispVal);
+	hostObjectVariant.vt = VT_DISPATCH;
+
+	std::wstring origin = NormalizeUri(measure->currentUrl);
+	LPCWSTR origins = L"*"; // all-origins
+
+	frame2->AddHostObjectToScriptWithOrigins(L"RainmeterAPI", &hostObjectVariant, 1, &origins);
+
+	auto newFrameState = std::make_shared<Frames>();
+	newFrameState->frame = frame2;
+	newFrameState->injected = false;
+
+	measure->webViewFrames.push_back(newFrameState);
+
+	Frames* frameState = newFrameState.get();
+
+	// Inject frame ancestor to nested frames to allow framing websites. (Requires http-server).
+	frame2->add_NavigationStarting(
+		Microsoft::WRL::Callback<ICoreWebView2FrameNavigationStartingEventHandler>(
+			[measure, origin](ICoreWebView2Frame* sender, ICoreWebView2NavigationStartingEventArgs* args) -> HRESULT
+			{
+				wil::com_ptr<ICoreWebView2NavigationStartingEventArgs2> navigationStartArgs;
+				if (SUCCEEDED(args->QueryInterface(IID_PPV_ARGS(&navigationStartArgs))))
+				{
+					navigationStartArgs->put_AdditionalAllowedFrameAncestors(origin.c_str());
+				}
+				return S_OK;
+			}
+		).Get(), nullptr
+	);
+
+	// Inject AllowDualControl script to frames.
+	frame2->add_DOMContentLoaded(
+		Callback<ICoreWebView2FrameDOMContentLoadedEventHandler>(
+			[measure, frameState](ICoreWebView2Frame* sender, ICoreWebView2DOMContentLoadedEventArgs* args) -> HRESULT
+			{
+				frameState->injected = false;
+				if (measure->allowDualControl)
+				{
+					InjectAllowDualControlFrame(measure, frameState);
+				}
+				return S_OK;
+			}
+		).Get(), nullptr
+	);
+
+	frame2->add_Destroyed(
+		Callback<ICoreWebView2FrameDestroyedEventHandler>(
+			[measure](ICoreWebView2Frame* sender, IUnknown* args)->HRESULT
+			{
+				if (measure->isStopping)
+					return S_OK;
+				// Remove frame
+				auto it = std::remove_if(
+					measure->webViewFrames.begin(),
+					measure->webViewFrames.end(),
+					[sender](const std::shared_ptr<Frames>& f)
+					{
+						// Check equality against the COM pointer inside the struct
+						return f->frame.get() == sender;
+					}
+				);
+				if (it != measure->webViewFrames.end())
+				{
+					measure->webViewFrames.erase(it, measure->webViewFrames.end());
+				}
+				return S_OK;
+			}
+		).Get(), nullptr
+	);
+
+	// Subscribe to FrameCreated on THIS frame to catch its children
+	wil::com_ptr<ICoreWebView2Frame7> frame7;
+	if (SUCCEEDED(frame->QueryInterface(IID_PPV_ARGS(&frame7))))
+	{
+		frame7->add_FrameCreated(
+			Microsoft::WRL::Callback<ICoreWebView2FrameChildFrameCreatedEventHandler>(
+				[measure](ICoreWebView2Frame* sender, ICoreWebView2FrameCreatedEventArgs* args) -> HRESULT
+				{
+					wil::com_ptr<ICoreWebView2Frame> childFrame;
+					RETURN_IF_FAILED(args->get_Frame(&childFrame));
+					// RECURSIVE CALL: Treat the child exactly like the parent
+					RegisterFrames(measure, childFrame.get());
+					return S_OK;
+				}).Get(), nullptr);
+	}
+}
+
 // Create WebView2 environment and controller
 void CreateWebView2(Measure* measure)
 {
@@ -229,6 +335,7 @@ HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller
 
 	wil::com_ptr<ICoreWebView2_4> webView4;
 	webView->QueryInterface(IID_PPV_ARGS(&webView4));
+
 	if (webView4) {
 		webView4->add_FrameCreated(
 			Microsoft::WRL::Callback<ICoreWebView2FrameCreatedEventHandler>(
@@ -237,61 +344,11 @@ HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller
 					wil::com_ptr<ICoreWebView2Frame> frame;
 					RETURN_IF_FAILED(args->get_Frame(&frame));
 
-					wil::com_ptr<ICoreWebView2Frame2> frame2;
-					RETURN_IF_FAILED(frame->QueryInterface(IID_PPV_ARGS(&frame2)));
-
-					if (frame2) {
-						// Add host object
-						wil::com_ptr<HostObjectRmAPI> hostObject =
-							Microsoft::WRL::Make<HostObjectRmAPI>(this, g_typeLib);
-
-						wil::unique_variant hostObjectVariant;
-						hostObject.query_to<IDispatch>(&hostObjectVariant.pdispVal);
-						hostObjectVariant.vt = VT_DISPATCH;
-
-						std::wstring origin = NormalizeUri(currentUrl);
-						LPCWSTR origins = L"*"; // all-origins
-
-						frame2->AddHostObjectToScriptWithOrigins(L"RainmeterAPI", &hostObjectVariant, 1, &origins);
-
-						this->webViewFrames.push_back(Frames{ frame2, false });
-						Frames* frameState = &this->webViewFrames.back();
-
-						// Inject frame ancestor to nested frames to allow framing websites. (Requires http-server).
-						frame2->add_NavigationStarting(
-							Microsoft::WRL::Callback<ICoreWebView2FrameNavigationStartingEventHandler>(
-								[origin](ICoreWebView2Frame* sender, ICoreWebView2NavigationStartingEventArgs* args) -> HRESULT
-								{
-									wil::com_ptr<ICoreWebView2NavigationStartingEventArgs2> navigationStartArgs;
-									if (SUCCEEDED(args->QueryInterface(IID_PPV_ARGS(&navigationStartArgs))))
-									{
-										navigationStartArgs->put_AdditionalAllowedFrameAncestors(origin.c_str());
-									}
-									return S_OK;
-
-								}
-							).Get(), nullptr
-						);
-
-						// Inject AllowDualControl script to frames.
-						frame2->add_DOMContentLoaded(
-							Callback<ICoreWebView2FrameDOMContentLoadedEventHandler>(
-								[this, frameState](ICoreWebView2Frame* sender, ICoreWebView2DOMContentLoadedEventArgs* args) -> HRESULT {
-
-									frameState->injected = false;
-
-									if (this->allowDualControl)
-									{
-										InjectAllowDualControlFrame(this, frameState);
-									}
-									return S_OK;
-								}
-							).Get(), nullptr
-						);
-					}
+					RegisterFrames(this, frame.get());
 
 					return S_OK;
-				}).Get(), nullptr
+				}
+			).Get(), nullptr
 		);
 	}
 
@@ -316,7 +373,7 @@ HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller
 				}
 				return S_OK;
 			}
-		).Get(),nullptr
+		).Get(), nullptr
 	);
 
 	// Avoid browser from opening links on different windows and block not user requested popups
@@ -398,7 +455,7 @@ HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller
 				}
 				return S_OK;
 			}
-		).Get(),nullptr
+		).Get(), nullptr
 	);
 
 	// Add SourceChanged event to detect changes in URL
@@ -432,7 +489,7 @@ HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller
 				}
 				return S_OK;
 			}
-		).Get(),nullptr
+		).Get(), nullptr
 	);
 
 	// Add ContentLoading event to call action when page starts loading
@@ -450,7 +507,7 @@ HRESULT Measure::CreateControllerHandler(HRESULT result, ICoreWebView2Controller
 				}
 				return S_OK;
 			}
-		).Get(),nullptr
+		).Get(), nullptr
 	);
 
 	// Add DOMContentLoaded event to inject AllowDualControl
@@ -583,10 +640,13 @@ void StopWebView2(Measure* measure)
 	
 	measure->isCreationInProgress = false;
 
-	// Hide (prevents flicker)
+	measure->webViewFrames.clear();
+
+	// Close the Controller 
 	if (measure->webViewController)
 	{
 		measure->webViewController->put_IsVisible(FALSE);
+		measure->webViewController->Close();
 	}
 
 	// Stop navigation
@@ -596,8 +656,8 @@ void StopWebView2(Measure* measure)
 	}
 
 	// Release
-	measure->webView.reset();
 	measure->webViewController.reset();
+	measure->webView.reset();
 	measure->webViewEnvironment.reset();
 
 	// Reset flags
@@ -620,6 +680,7 @@ void StopWebView2(Measure* measure)
 	{
 		RmLog(measure->rm, LOG_NOTICE, L"WebView2: Stopped sucessfully");
 	}
+	
 	measure->isStopping = false;
 }
 
