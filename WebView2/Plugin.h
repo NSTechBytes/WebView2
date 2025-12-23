@@ -8,7 +8,7 @@
 #include <wrl.h>
 #include <wil/com.h>
 #include <WebView2.h>
-#include <deque>
+#include <memory>
 
 using namespace Microsoft::WRL;
 
@@ -17,7 +17,7 @@ extern wil::com_ptr<ITypeLib> g_typeLib;
 
 struct Frames
 {
-    wil::com_ptr<ICoreWebView2Frame2> name;
+    wil::com_ptr<ICoreWebView2Frame2> frame;
     bool injected = false;
 };
 
@@ -65,7 +65,7 @@ struct Measure
     wil::com_ptr<ICoreWebView2Environment> webViewEnvironment;
     wil::com_ptr<ICoreWebView2Controller> webViewController;
     wil::com_ptr<ICoreWebView2> webView;
-    std::deque<Frames> Measure::webViewFrames;
+    std::vector<std::shared_ptr<Frames>> Measure::webViewFrames;
 
     EventRegistrationToken webMessageToken;
 
