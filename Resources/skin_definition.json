@@ -1,8 +1,8 @@
 ﻿{
     "skinDir":  ".\\Resources\\Skins",
-    "version":  "0.0.8",
+    "version":  "1.0.0",
     "minimumVersion":  "4.5",
-    "author":  "nstechbytes",
+    "author":  "nstechbytes & RicardoTM",
     "variableFiles":  "",
     "minimumWindows":  "5.1",
     "plugins":  [
@@ -17,5 +17,5 @@
     "load":  "WebView2\\Clock\\Clock.ini",
     "headerImage":  ".\\Resources\\banner.bmp",
     "configPrefix":  "WebView2",
-    "output":  ".\\dist\\WebView2_v0.0.8_Alpha8.rmskin"
+    "output":  ".\\dist\\WebView2_v1.0.0.rmskin"
 }
